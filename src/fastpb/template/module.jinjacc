@@ -46,6 +46,15 @@
   }
 
 
+  static PyObject *
+  {{ message.name }}_ParseFromString({{ message.name }}* self, PyObject *value)
+  {
+      std::string serialized(PyString_AsString(value), PyString_Size(value));
+      self->protobuf->ParseFromString(serialized);
+      return Py_None;
+  }
+
+
   {% for member in message.field %}
     static PyObject *
     {{ message.name }}_get{{ member.name }}({{ message.name }} *self, void *closure)
@@ -153,6 +162,9 @@
   static PyMethodDef {{ message.name }}_methods[] = {
       {"SerializeToString", (PyCFunction){{ message.name }}_SerializeToString, METH_NOARGS,
        "Serializes the protocol buffer to a string."
+      },
+      {"ParseFromString", (PyCFunction){{ message.name }}_ParseFromString, METH_O,
+       "Parses the protocol buffer from a string."
       },
       {NULL}  // Sentinel
   };
