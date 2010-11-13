@@ -6,9 +6,6 @@
 {% for message in messages %}
   typedef struct {
       PyObject_HEAD
-      {% for member in message.field %}
-        PyObject *{{ member.name }};
-      {% endfor %}
 
       {{ package }}::{{ message.name }} protobuf;
   } {{ message.name }};
@@ -16,9 +13,6 @@
   static void
   {{ message.name }}_dealloc({{ message.name }}* self)
   {
-      {% for member in members %}
-        Py_XDECREF(self->{{ member.name }});
-      {% endfor %}
       self->ob_type->tp_free((PyObject*)self);
   }
 
@@ -28,11 +22,6 @@
       {{ message.name }} *self;
 
       self = ({{ message.name }} *)type->tp_alloc(type, 0);
-      if (self != NULL) {
-        {% for member in message.field %}
-          self->{{ member.name }} = Py_None;
-        {% endfor %}
-      }
 
       return (PyObject *)self;
   }
