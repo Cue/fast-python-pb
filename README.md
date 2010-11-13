@@ -5,11 +5,11 @@ Fast Python Protocol Buffers
 ----------------------------
 
 
-Usage:
+### Usage:
 
     protoc --fastpython_out /output/path --cpp_out /tmp/testpb --proto_path your/path your/path/file.proto
 
 
-Authors:
+### Authors:
 
 Greplin, Inc.
