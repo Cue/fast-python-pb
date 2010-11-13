@@ -11,12 +11,10 @@ import tempfile
 
 
 def main():
-  log = sys.stderr
-
   request = plugin_pb2.CodeGeneratorRequest()
   request.ParseFromString(sys.stdin.read())
 
-  path = tempfile.mkdtemp()
+  response = plugin_pb2.CodeGeneratorResponse()
 
   generateFiles = set(request.file_to_generate)
   files = []
@@ -32,17 +30,19 @@ def main():
       'messages': file.message_type
     }
 
-    cFilePath = os.path.join(path, name + '.c')
-    with open(cFilePath, 'w') as f:
-      t = Template(resource_string(__name__, 'template/module.jinja.c'))
-      f.write(t.render(context))
+    # Write the C file.
+    t = Template(resource_string(__name__, 'template/module.jinja.c'))
+    cFile = response.file.add()
+    cFile.name = name + '.c'
+    cFile.content = t.render(context)
 
-  setupPyPath = os.path.join(path, 'setup.py')
-  with open(setupPyPath, 'w') as f:
-    t = Template(resource_string(__name__, 'template/setup.jinja.py'))
-    f.write(t.render({'files': files}))
+  # Write setup.py.
+  t = Template(resource_string(__name__, 'template/setup.jinja.py'))
+  setupFile = response.file.add()
+  setupFile.name = 'setup.py'
+  setupFile.content = t.render({'files': files})
 
-  print >> log, path
+  sys.stdout.write(response.SerializeToString())
 
 
 if __name__ == '__main__':
