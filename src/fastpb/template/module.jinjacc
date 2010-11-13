@@ -3,6 +3,32 @@
 #include "structmember.h"
 #include "{{ moduleName }}.pb.h"
 
+
+static PyObject *
+fastpb_convert{{ TYPE.INT64 }}(long value)
+{
+    return PyLong_FromLong(value);
+}
+
+static PyObject *
+fastpb_convert{{ TYPE.DOUBLE }}(double value)
+{
+    return PyFloat_FromDouble(value);
+}
+
+static PyObject *
+fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
+{
+    return PyString_FromStringAndSize(value.data(), value.length());
+}
+
+static PyObject *
+fastpb_convert{{ TYPE.MESSAGE }}(const ::google::protobuf::Message &value)
+{
+    // TODO(robbyw): This.
+    return Py_None;
+}
+
 {% for message in messages %}
   typedef struct {
       PyObject_HEAD
@@ -60,37 +86,40 @@
     {{ message.name }}_get{{ member.name }}({{ message.name }} *self, void *closure)
     {
         {% if member.label == LABEL.REPEATED %}
-          // TODO(robbyw): Handle repeated fields.
+          int len = self->protobuf->{{ member.name.lower() }}_size();
+          PyObject *tuple = PyTuple_New(len);
+          for (int i = 0; i < len; ++i) {
+            PyObject *value = fastpb_convert{{ member.type }}(self->protobuf->{{ member.name.lower() }}(i));
+            PyTuple_SetItem(tuple, i, value);
+          }
+          return tuple;
 
         {% else %}
           if (! self->protobuf->has_{{ member.name.lower() }}()) {
             return Py_None;
           }
 
-          {% if member.type == TYPE.INT64 %}
-            return PyLong_FromLong(self->protobuf->{{ member.name.lower() }}());
-
-          {% elif member.type == TYPE.DOUBLE %}
-            return PyFloat_FromDouble(self->protobuf->{{ member.name.lower() }}());
-
-          {% elif member.type == TYPE.STRING %}
-            const std::string value = self->protobuf->{{ member.name.lower() }}();
-            return PyString_FromStringAndSize(value.data(), value.length());
-            return PyString_FromStringAndSize("abc", 3);
-
-          {% endif %}
+          return fastpb_convert{{ member.type }}(self->protobuf->{{ member.name.lower() }}());
         {% endif %}
-
-        return Py_None;
     }
 
     static int
-    {{ message.name }}_set{{ member.name }}({{ message.name }} *self, PyObject *value, void *closure)
+    {{ message.name }}_set{{ member.name }}({{ message.name }} *self, PyObject *input, void *closure)
     {
-      if (value == NULL) {
+      if (input == NULL) {
         PyErr_SetString(PyExc_TypeError, "Cannot delete the {{ member.name }} attribute");
         return -1;
       }
+
+      {% if member.label == LABEL.REPEATED %}
+        PyObject *sequence = PySequence_Fast(input, "The {{ member.name }} attribute value must be a sequence");
+        self->protobuf->clear_{{ member.name.lower() }}();
+        for (Py_ssize_t i = 0, len = PySequence_Length(sequence); i < len; ++i) {
+          PyObject *value = PySequence_Fast_GET_ITEM(sequence, i);
+
+      {% else %}
+        PyObject *value = input;
+      {% endif %}
 
       {% if member.type == TYPE.STRING %}
         // string
@@ -131,10 +160,20 @@
           return -1;
         }
 
+      {% elif member.type == TYPE.MESSAGE %}
+
+        // TODO(robbyw): create the message
+        {{ member.type_name.replace('.', '::') }} *protoValue = NULL;
+
       {% endif %}
 
       {% if member.label == LABEL.REPEATED %}
-
+          {% if member.type == TYPE.MESSAGE %}
+            // TODO(robbyw): add the child proto
+          {% else %}
+            self->protobuf->add_{{ member.name.lower() }}(protoValue);
+          {% endif %}
+        }
       {% else %}
         self->protobuf->set_{{ member.name.lower() }}(protoValue);
       {% endif %}
