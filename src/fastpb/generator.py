@@ -2,6 +2,7 @@
 
 import plugin_pb2
 
+from google.protobuf import descriptor_pb2
 from jinja2 import Template
 from pkg_resources import resource_string
 
@@ -28,7 +29,16 @@ def main():
     context = {
       'moduleName': name,
       'package': file.package.replace('.', '::'),
-      'messages': file.message_type
+      'messages': file.message_type,
+      'TYPE': {
+        'STRING': descriptor_pb2.FieldDescriptorProto.TYPE_STRING,
+        'DOUBLE': descriptor_pb2.FieldDescriptorProto.TYPE_DOUBLE,
+        'INT64': descriptor_pb2.FieldDescriptorProto.TYPE_INT64,
+        # TODO(robbyw): More types.
+      },
+      'LABEL': {
+        'REPEATED': descriptor_pb2.FieldDescriptorProto.LABEL_REPEATED
+      }
     }
 
     # Write the C file.

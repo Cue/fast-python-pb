@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <string>
 #include "structmember.h"
 #include "{{ moduleName }}.pb.h"
 
@@ -43,12 +44,43 @@
   }
 
 
+  static PyObject *
+  {{ message.name }}_SerializeToString({{ message.name }}* self)
+  {
+      /*
+      Currently segfaults.
+
+      std::string result;
+      self->protobuf.SerializeToString(&result);
+      return PyString_FromStringAndSize(result.data(), result.length());
+      */
+
+      return Py_None;
+  }
+
+
   {% for member in message.field %}
     static PyObject *
     {{ message.name }}_get{{ member.name }}({{ message.name }} *self, void *closure)
     {
-        Py_INCREF(self->{{ member.name }});
-        return self->{{ member.name }};
+        {% if member.label == LABEL.REPEATED %}
+          // TODO(robbyw): Handle repeated fields.
+
+        {% else %}
+          {% if member.type == TYPE.INT64 %}
+            return PyLong_FromLong(self->protobuf.{{ member.name.lower() }}());
+
+          {% elif member.type == TYPE.DOUBLE %}
+            return PyFloat_FromDouble(self->protobuf.{{ member.name.lower() }}());
+
+          {% elif member.type == TYPE.STRING %}
+            const std::string value = self->protobuf.{{ member.name.lower() }}();
+            return PyString_FromStringAndSize(value.data(), value.length());
+
+          {% endif %}
+        {% endif %}
+
+        return Py_None;
     }
 
     static int
@@ -59,15 +91,52 @@
         return -1;
       }
 
-      if (! PyString_Check(value)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "The {{ member.name }} attribute value must be a string");
-        return -1;
-      }
+      {% if member.type == TYPE.STRING %}
+        // string
+        if (! PyString_Check(value)) {
+          PyErr_SetString(PyExc_TypeError,
+                          "The {{ member.name }} attribute value must be a string");
+          return -1;
+        }
 
-      Py_DECREF(self->{{ member.name }});
-      Py_INCREF(value);
-      self->{{ member.name }} = value;
+        std::string protoValue(PyString_AsString(value), PyString_Size(value));
+
+      {% elif member.type == TYPE.DOUBLE %}
+        // double
+        double protoValue;
+        if (PyFloat_Check(value)) {
+          protoValue = PyFloat_AsDouble(value);
+        } else if (PyInt_Check(value)) {
+          protoValue = PyInt_AsLong(value);
+        } else if (PyLong_Check(value)) {
+          protoValue = PyLong_AsLong(value);
+        } else {
+          PyErr_SetString(PyExc_TypeError,
+                          "The {{ member.name }} attribute value must be an integer");
+          return -1;
+        }
+
+      {% elif member.type == TYPE.INT64 %}
+        long protoValue;
+
+        // int64
+        if (PyInt_Check(value)) {
+          protoValue = PyInt_AsLong(value);
+        } else if (PyLong_Check(value)) {
+          protoValue = PyLong_AsLong(value);
+        } else {
+          PyErr_SetString(PyExc_TypeError,
+                          "The {{ member.name }} attribute value must be an integer");
+          return -1;
+        }
+
+      {% endif %}
+
+      {% if member.label == LABEL.REPEATED %}
+
+      {% else %}
+        self->protobuf.set_{{ member.name.lower() }}(protoValue);
+      {% endif %}
 
       return 0;
     }
@@ -91,6 +160,9 @@
 
 
   static PyMethodDef {{ message.name }}_methods[] = {
+      {"SerializeToString", (PyCFunction){{ message.name }}_SerializeToString, METH_NOARGS,
+       "Serializes the protocol buffer to a string."
+      },
       {NULL}  /* Sentinel */
   };
 
