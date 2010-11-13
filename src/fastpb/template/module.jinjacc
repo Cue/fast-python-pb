@@ -22,13 +22,6 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
     return PyString_FromStringAndSize(value.data(), value.length());
 }
 
-static PyObject *
-fastpb_convert{{ TYPE.MESSAGE }}(const ::google::protobuf::Message &value)
-{
-    // TODO(robbyw): This.
-    return Py_None;
-}
-
 {% for message in messages %}
   typedef struct {
       PyObject_HEAD
@@ -82,6 +75,14 @@ fastpb_convert{{ TYPE.MESSAGE }}(const ::google::protobuf::Message &value)
 
 
   {% for member in message.field %}
+    {% if member.type == TYPE.MESSAGE %}
+      static PyObject *
+      fastpb_convert{{ message.name + member.name }}(const ::google::protobuf::Message &value)
+      {
+          return Py_None;
+      }
+    {% endif %}
+
     static PyObject *
     {{ message.name }}_get{{ member.name }}({{ message.name }} *self, void *closure)
     {
@@ -89,7 +90,9 @@ fastpb_convert{{ TYPE.MESSAGE }}(const ::google::protobuf::Message &value)
           int len = self->protobuf->{{ member.name.lower() }}_size();
           PyObject *tuple = PyTuple_New(len);
           for (int i = 0; i < len; ++i) {
-            PyObject *value = fastpb_convert{{ member.type }}(self->protobuf->{{ member.name.lower() }}(i));
+            PyObject *value =
+                fastpb_convert{{ member.type if member.type != TYPE.MESSAGE else message.name + member.name }}(
+                    self->protobuf->{{ member.name.lower() }}(i));
             PyTuple_SetItem(tuple, i, value);
           }
           return tuple;
@@ -99,7 +102,10 @@ fastpb_convert{{ TYPE.MESSAGE }}(const ::google::protobuf::Message &value)
             return Py_None;
           }
 
-          return fastpb_convert{{ member.type }}(self->protobuf->{{ member.name.lower() }}());
+          return
+              fastpb_convert{{ member.type if member.type != TYPE.MESSAGE else message.name + member.name }}(
+                  self->protobuf->{{ member.name.lower() }}());
+
         {% endif %}
     }
 
