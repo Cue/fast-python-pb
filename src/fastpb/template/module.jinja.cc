@@ -1,5 +1,6 @@
 #include <Python.h>
 #include "structmember.h"
+#include "{{ moduleName }}.pb.h"
 
 {% for message in messages %}
   typedef struct {
@@ -7,30 +8,16 @@
       {% for member in message.field %}
         PyObject *{{ member.name }};
       {% endfor %}
+
+      {{ package }}::{{ message.name }} protobuf;
   } {{ message.name }};
-
-  static int
-  {{ message.name }}_traverse({{ message.name }} *self, visitproc visit, void *arg)
-  {
-    {% for member in message.field %}
-      Py_VISIT(self->{{ member.name }});
-    {% endfor %}
-      return 0;
-  }
-
-  static int
-  {{ message.name }}_clear({{ message.name }} *self)
-  {
-    {% for member in message.field %}
-      Py_CLEAR(self->{{ member.name }});
-    {% endfor %}
-      return 0;
-  }
 
   static void
   {{ message.name }}_dealloc({{ message.name }}* self)
   {
-      {{ message.name }}_clear(self);
+      {% for member in members %}
+        Py_XDECREF(self->{{ member.name }});
+      {% endfor %}
       self->ob_type->tp_free((PyObject*)self);
   }
 
@@ -52,51 +39,56 @@
   static int
   {{ message.name }}_init({{ message.name }} *self, PyObject *args, PyObject *kwds)
   {
-    {% for member in message.field %}
-      PyObject *{{ member.name }}=NULL;
-    {% endfor %}
-      PyObject *tmp;
-
-      static char *kwlist[] = {
-        {% for member in message.field %}
-          "{{ member.name }}",
-        {% endfor %}
-        NULL
-      };
-
-      if (! PyArg_ParseTupleAndKeywords(
-          args, kwds, "|OO", kwlist,
-          {% for member in message.field %}
-            &{{ member.name }}
-            {% if not loop.last %}
-              ,
-            {% endif %}
-          {% endfor %}
-          ))
-          return -1;
-
-    {% for member in message.field %}
-      if ({{ member.name }}) {
-          tmp = self->{{ member.name }};
-          Py_INCREF({{ member.name }});
-          self->{{ member.name }} = {{ member.name }};
-          if (tmp) {
-            Py_XDECREF(tmp);
-          }
-      }
-    {% endfor %}
-
       return 0;
   }
 
 
+  {% for member in message.field %}
+    static PyObject *
+    {{ message.name }}_get{{ member.name }}({{ message.name }} *self, void *closure)
+    {
+        Py_INCREF(self->{{ member.name }});
+        return self->{{ member.name }};
+    }
+
+    static int
+    {{ message.name }}_set{{ member.name }}({{ message.name }} *self, PyObject *value, void *closure)
+    {
+      if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the {{ member.name }} attribute");
+        return -1;
+      }
+
+      if (! PyString_Check(value)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "The {{ member.name }} attribute value must be a string");
+        return -1;
+      }
+
+      Py_DECREF(self->{{ member.name }});
+      Py_INCREF(value);
+      self->{{ member.name }} = value;
+
+      return 0;
+    }
+  {% endfor %}
+
+
   static PyMemberDef {{ message.name }}_members[] = {
+      {NULL}  /* Sentinel */
+  };
+
+
+  static PyGetSetDef {{ message.name }}_getsetters[] = {
     {% for member in message.field %}
-      {"{{ member.name }}", T_OBJECT_EX, offsetof({{ message.name }}, {{ member.name }}), 0,
-       "{{ member.description }}"},
+      {(char *)"{{ member.name }}",
+       (getter){{ message.name }}_get{{ member.name }}, (setter){{ message.name }}_set{{ member.name }},
+       (char *)"",
+       NULL},
     {% endfor %}
       {NULL}  /* Sentinel */
   };
+
 
   static PyMethodDef {{ message.name }}_methods[] = {
       {NULL}  /* Sentinel */
@@ -124,24 +116,24 @@
       0,                                   /*tp_setattro*/
       0,                                   /*tp_as_buffer*/
       Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-      "{{ message.name }} objects",           /* tp_doc */
-      (traverseproc){{ message.name }}_traverse,   /* tp_traverse */
-      (inquiry){{ message.name }}_clear,           /* tp_clear */
-      0,		               /* tp_richcompare */
-      0,		               /* tp_weaklistoffset */
-      0,		               /* tp_iter */
-      0,		               /* tp_iternext */
-      {{ message.name }}_methods,             /* tp_methods */
-      {{ message.name }}_members,             /* tp_members */
-      0,                         /* tp_getset */
-      0,                         /* tp_base */
-      0,                         /* tp_dict */
-      0,                         /* tp_descr_get */
-      0,                         /* tp_descr_set */
-      0,                         /* tp_dictoffset */
-      (initproc){{ message.name }}_init,      /* tp_init */
-      0,                         /* tp_alloc */
-      {{ message.name }}_new,                 /* tp_new */
+      "{{ message.name }} objects",        /* tp_doc */
+      0,                                   /* tp_traverse */
+      0,                                   /* tp_clear */
+      0,                		               /* tp_richcompare */
+      0,		                               /* tp_weaklistoffset */
+      0,                		               /* tp_iter */
+      0,		                               /* tp_iternext */
+      {{ message.name }}_methods,          /* tp_methods */
+      {{ message.name }}_members,          /* tp_members */
+      {{ message.name }}_getsetters,       /* tp_getset */
+      0,                                   /* tp_base */
+      0,                                   /* tp_dict */
+      0,                                   /* tp_descr_get */
+      0,                                   /* tp_descr_set */
+      0,                                   /* tp_dictoffset */
+      (initproc){{ message.name }}_init,   /* tp_init */
+      0,                                   /* tp_alloc */
+      {{ message.name }}_new,              /* tp_new */
   };
 
 {% endfor %}

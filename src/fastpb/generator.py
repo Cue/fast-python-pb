@@ -27,13 +27,14 @@ def main():
 
     context = {
       'moduleName': name,
+      'package': file.package.replace('.', '::'),
       'messages': file.message_type
     }
 
     # Write the C file.
-    t = Template(resource_string(__name__, 'template/module.jinja.c'))
+    t = Template(resource_string(__name__, 'template/module.jinja.cc'))
     cFile = response.file.add()
-    cFile.name = name + '.c'
+    cFile.name = name + '.cc'
     cFile.content = t.render(context)
 
   # Write setup.py.
