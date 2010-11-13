@@ -7,13 +7,15 @@
   typedef struct {
       PyObject_HEAD
 
-      {{ package }}::{{ message.name }} protobuf;
+      {{ package }}::{{ message.name }} *protobuf;
   } {{ message.name }};
 
   static void
   {{ message.name }}_dealloc({{ message.name }}* self)
   {
       self->ob_type->tp_free((PyObject*)self);
+
+      delete self->protobuf;
   }
 
   static PyObject *
@@ -22,6 +24,8 @@
       {{ message.name }} *self;
 
       self = ({{ message.name }} *)type->tp_alloc(type, 0);
+
+      self->protobuf = new {{ package }}::{{ message.name }}();
 
       return (PyObject *)self;
   }
@@ -36,15 +40,9 @@
   static PyObject *
   {{ message.name }}_SerializeToString({{ message.name }}* self)
   {
-      /*
-      Currently segfaults.
-
       std::string result;
-      self->protobuf.SerializeToString(&result);
+      self->protobuf->SerializeToString(&result);
       return PyString_FromStringAndSize(result.data(), result.length());
-      */
-
-      return Py_None;
   }
 
 
@@ -56,15 +54,20 @@
           // TODO(robbyw): Handle repeated fields.
 
         {% else %}
+          if (! self->protobuf->has_{{ member.name.lower() }}()) {
+            return Py_None;
+          }
+
           {% if member.type == TYPE.INT64 %}
-            return PyLong_FromLong(self->protobuf.{{ member.name.lower() }}());
+            return PyLong_FromLong(self->protobuf->{{ member.name.lower() }}());
 
           {% elif member.type == TYPE.DOUBLE %}
-            return PyFloat_FromDouble(self->protobuf.{{ member.name.lower() }}());
+            return PyFloat_FromDouble(self->protobuf->{{ member.name.lower() }}());
 
           {% elif member.type == TYPE.STRING %}
-            const std::string value = self->protobuf.{{ member.name.lower() }}();
+            const std::string value = self->protobuf->{{ member.name.lower() }}();
             return PyString_FromStringAndSize(value.data(), value.length());
+            return PyString_FromStringAndSize("abc", 3);
 
           {% endif %}
         {% endif %}
@@ -124,16 +127,15 @@
       {% if member.label == LABEL.REPEATED %}
 
       {% else %}
-        self->protobuf.set_{{ member.name.lower() }}(protoValue);
+        self->protobuf->set_{{ member.name.lower() }}(protoValue);
       {% endif %}
 
       return 0;
     }
   {% endfor %}
 
-
   static PyMemberDef {{ message.name }}_members[] = {
-      {NULL}  /* Sentinel */
+      {NULL}  // Sentinel
   };
 
 
@@ -144,7 +146,7 @@
        (char *)"",
        NULL},
     {% endfor %}
-      {NULL}  /* Sentinel */
+      {NULL}  // Sentinel
   };
 
 
@@ -152,63 +154,66 @@
       {"SerializeToString", (PyCFunction){{ message.name }}_SerializeToString, METH_NOARGS,
        "Serializes the protocol buffer to a string."
       },
-      {NULL}  /* Sentinel */
+      {NULL}  // Sentinel
   };
+
 
   static PyTypeObject {{ message.name }}Type = {
       PyObject_HEAD_INIT(NULL)
-      0,                                   /*ob_size*/
+      0,                                      /*ob_size*/
       "{{ moduleName }}.{{ message.name }}",  /*tp_name*/
       sizeof({{ message.name }}),             /*tp_basicsize*/
-      0,                                   /*tp_itemsize*/
+      0,                                      /*tp_itemsize*/
       (destructor){{ message.name }}_dealloc, /*tp_dealloc*/
-      0,                                   /*tp_print*/
-      0,                                   /*tp_getattr*/
-      0,                                   /*tp_setattr*/
-      0,                                   /*tp_compare*/
-      0,                                   /*tp_repr*/
-      0,                                   /*tp_as_number*/
-      0,                                   /*tp_as_sequence*/
-      0,                                   /*tp_as_mapping*/
-      0,                                   /*tp_hash */
-      0,                                   /*tp_call*/
-      0,                                   /*tp_str*/
-      0,                                   /*tp_getattro*/
-      0,                                   /*tp_setattro*/
-      0,                                   /*tp_as_buffer*/
-      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-      "{{ message.name }} objects",        /* tp_doc */
-      0,                                   /* tp_traverse */
-      0,                                   /* tp_clear */
-      0,                		               /* tp_richcompare */
-      0,		                               /* tp_weaklistoffset */
-      0,                		               /* tp_iter */
-      0,		                               /* tp_iternext */
-      {{ message.name }}_methods,          /* tp_methods */
-      {{ message.name }}_members,          /* tp_members */
-      {{ message.name }}_getsetters,       /* tp_getset */
-      0,                                   /* tp_base */
-      0,                                   /* tp_dict */
-      0,                                   /* tp_descr_get */
-      0,                                   /* tp_descr_set */
-      0,                                   /* tp_dictoffset */
-      (initproc){{ message.name }}_init,   /* tp_init */
-      0,                                   /* tp_alloc */
-      {{ message.name }}_new,              /* tp_new */
+      0,                                      /*tp_print*/
+      0,                                      /*tp_getattr*/
+      0,                                      /*tp_setattr*/
+      0,                                      /*tp_compare*/
+      0,                                      /*tp_repr*/
+      0,                                      /*tp_as_number*/
+      0,                                      /*tp_as_sequence*/
+      0,                                      /*tp_as_mapping*/
+      0,                                      /*tp_hash */
+      0,                                      /*tp_call*/
+      0,                                      /*tp_str*/
+      0,                                      /*tp_getattro*/
+      0,                                      /*tp_setattro*/
+      0,                                      /*tp_as_buffer*/
+      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+      "{{ message.name }} objects",           /* tp_doc */
+      0,                                      /* tp_traverse */
+      0,                                      /* tp_clear */
+      0,                   	 	                /* tp_richcompare */
+      0,	   	                                /* tp_weaklistoffset */
+      0,                   		                /* tp_iter */
+      0,		                                  /* tp_iternext */
+      {{ message.name }}_methods,             /* tp_methods */
+      {{ message.name }}_members,             /* tp_members */
+      {{ message.name }}_getsetters,          /* tp_getset */
+      0,                                      /* tp_base */
+      0,                                      /* tp_dict */
+      0,                                      /* tp_descr_get */
+      0,                                      /* tp_descr_set */
+      0,                                      /* tp_dictoffset */
+      (initproc){{ message.name }}_init,      /* tp_init */
+      0,                                      /* tp_alloc */
+      {{ message.name }}_new,                 /* tp_new */
   };
 
 {% endfor %}
 
 static PyMethodDef module_methods[] = {
-    {NULL}  /* Sentinel */
+    {NULL}  // Sentinel
 };
 
-#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
+#ifndef PyMODINIT_FUNC	// Declarations for DLL import/export.
 #define PyMODINIT_FUNC void
 #endif
 PyMODINIT_FUNC
 init{{ moduleName }}(void)
 {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+
     PyObject* m;
 
     {% for message in messages %}
