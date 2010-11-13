@@ -32,13 +32,13 @@ def main():
     }
 
     # Write the C file.
-    t = Template(resource_string(__name__, 'template/module.jinja.cc'))
+    t = Template(resource_string(__name__, 'template/module.jinjacc'))
     cFile = response.file.add()
     cFile.name = name + '.cc'
     cFile.content = t.render(context)
 
   # Write setup.py.
-  t = Template(resource_string(__name__, 'template/setup.jinja.py'))
+  t = Template(resource_string(__name__, 'template/setup.jinjapy'))
   setupFile = response.file.add()
   setupFile.name = 'setup.py'
   setupFile.content = t.render({'files': files})
