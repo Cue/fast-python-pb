@@ -79,7 +79,10 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
       static PyObject *
       fastpb_convert{{ message.name + member.name }}(const ::google::protobuf::Message &value)
       {
-          return Py_None;
+          {{ member.type_name.split('.')[-1] }} *obj = ({{ member.type_name.split('.')[-1] }} *)
+              {{ member.type_name.split('.')[-1] }}_new(&{{ member.type_name.split('.')[-1] }}Type, NULL, NULL);
+          obj->protobuf->MergeFrom(value);
+          return (PyObject *)obj;
       }
     {% endif %}
 
@@ -186,7 +189,7 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
           self->protobuf->mutable_{{ member.name.lower() }}()->MergeFrom(*protoValue);
         {% else %}
           self->protobuf->set_{{ member.name.lower() }}(protoValue);
-        {% end %}
+        {% endif %}
       {% endif %}
 
       return 0;

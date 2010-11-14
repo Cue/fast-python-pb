@@ -15,8 +15,6 @@ def main():
   request = plugin_pb2.CodeGeneratorRequest()
   request.ParseFromString(sys.stdin.read())
 
-  print >> sys.stderr, request
-
   response = plugin_pb2.CodeGeneratorResponse()
 
   parents = set()
