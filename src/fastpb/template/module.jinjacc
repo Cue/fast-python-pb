@@ -168,7 +168,7 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
 
       {% elif member.type == TYPE.MESSAGE %}
 
-        // TODO(robbyw): create the message
+         // {{ member.type_name }}
         {{ member.type_name.replace('.', '::') }} *protoValue =
             (({{ member.type_name.split('.')[-1] }} *) value)->protobuf;
 
@@ -182,7 +182,11 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
           {% endif %}
         }
       {% else %}
-        self->protobuf->set_{{ member.name.lower() }}(protoValue);
+        {% if member.type == TYPE.MESSAGE %}
+          self->protobuf->mutable_{{ member.name.lower() }}()->MergeFrom(*protoValue);
+        {% else %}
+          self->protobuf->set_{{ member.name.lower() }}(protoValue);
+        {% end %}
       {% endif %}
 
       return 0;
