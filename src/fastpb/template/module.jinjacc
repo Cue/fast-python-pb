@@ -169,13 +169,14 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
       {% elif member.type == TYPE.MESSAGE %}
 
         // TODO(robbyw): create the message
-        {{ member.type_name.replace('.', '::') }} *protoValue = NULL;
+        {{ member.type_name.replace('.', '::') }} *protoValue =
+            (({{ member.type_name.split('.')[-1] }} *) value)->protobuf;
 
       {% endif %}
 
       {% if member.label == LABEL.REPEATED %}
           {% if member.type == TYPE.MESSAGE %}
-            // TODO(robbyw): add the child proto
+            self->protobuf->add_{{ member.name.lower() }}()->MergeFrom(*protoValue);
           {% else %}
             self->protobuf->add_{{ member.name.lower() }}(protoValue);
           {% endif %}
