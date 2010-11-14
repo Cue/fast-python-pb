@@ -49,13 +49,6 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
       return (PyObject *)self;
   }
 
-  static int
-  {{ message.name }}_init({{ message.name }} *self, PyObject *args, PyObject *kwds)
-  {
-      return 0;
-  }
-
-
   static PyObject *
   {{ message.name }}_SerializeToString({{ message.name }}* self)
   {
@@ -195,6 +188,41 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
       return 0;
     }
   {% endfor %}
+
+  static int
+  {{ message.name }}_init({{ message.name }} *self, PyObject *args, PyObject *kwds)
+  {
+      {% for member in message.field %}
+        PyObject *{{ member.name }} = NULL;
+      {% endfor %}
+
+      static char *kwlist[] = {
+        {% for member in message.field %}
+          (char *) "{{ member.name }}",
+        {% endfor %}
+        NULL
+      };
+
+      if (! PyArg_ParseTupleAndKeywords(
+          args, kwds, "|{{ 'O' * message.field|length }}", kwlist,
+          {% for member in message.field -%}
+            &{{ member.name }}
+            {%- if not loop.last -%}
+              ,
+            {%- endif -%}
+          {%- endfor %}))
+        return -1;
+
+      {% for member in message.field %}
+        if ({{ member.name }}) {
+          if ({{ message.name }}_set{{ member.name }}(self, {{ member.name }}, NULL) < 0) {
+            return -1;
+          }
+        }
+      {% endfor %}
+
+      return 0;
+  }
 
   static PyMemberDef {{ message.name }}_members[] = {
       {NULL}  // Sentinel
