@@ -1,7 +1,7 @@
 #include <Python.h>
 #include <string>
 #include "structmember.h"
-#include "{{ moduleName }}.pb.h"
+#include "{{ fileName }}.pb.h"
 
 
 static PyObject *
@@ -267,7 +267,7 @@ static PyMethodDef module_methods[] = {
 #define PyMODINIT_FUNC void
 #endif
 PyMODINIT_FUNC
-init{{ moduleName }}(void)
+init{{ packageName }}(void)
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -278,7 +278,7 @@ init{{ moduleName }}(void)
           return;
     {% endfor %}
 
-    m = Py_InitModule3("{{ moduleName }}", module_methods,
+    m = Py_InitModule3("{{ packageName }}", module_methods,
                        "{{ moduleDescription }}");
 
     if (m == NULL)

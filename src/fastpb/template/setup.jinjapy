@@ -1,7 +1,18 @@
 from distutils.core import setup, Extension
-setup(name="{{ moduleName }}", version="1.0",
+setup(name="ADD_NAME_HERE",
+      version="1.0",
+      packages=[
+        {% for parent in parents %}
+          "{{ parent }}",
+        {% endfor %}
+      ],
+      package_dir={
+        {% for parent in parents %}
+          "{{ parent }}": "src/{{ parent.replace('.', '/') }}",
+        {% endfor %}
+      },
       ext_modules=[
-        {% for name in files %}
-          Extension("{{ name }}", ["{{ name }}.cc", "{{ name }}.pb.cc"], libraries=['protobuf']),
+        {% for file in files %}
+          Extension("{{ file.package }}", ["{{ file.name }}.cc", "{{ file.name }}.pb.cc"], libraries=['protobuf']),
         {% endfor %}
       ])
