@@ -108,9 +108,9 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
     static int
     {{ message.name }}_set{{ member.name }}({{ message.name }} *self, PyObject *input, void *closure)
     {
-      if (input == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Cannot delete the {{ member.name }} attribute");
-        return -1;
+      if (input == NULL || input == Py_None) {
+        self->protobuf->clear_{{ member.name.lower() }}();
+        return 0;
       }
 
       {% if member.label == LABEL.REPEATED %}
