@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+"""Auto-generated unit tests."""
+
+import unittest
+
+{% for file in files %}
+import {{ file.package }}
+{% endfor %}
+
+{% macro value(field, index) -%}
+  {%- if field.label == LABEL.REPEATED -%}
+    (
+  {%- endif -%}
+  {%- if field.type == TYPE.STRING -%}
+    u'{{ index }}'
+  {%- elif field.type == TYPE.INT64 -%}
+    {{ index }}
+  {%- elif field.type == TYPE.DOUBLE -%}
+    {{ index }}.{{ index }}
+  {%- endif -%}
+  {%- if field.label == LABEL.REPEATED -%}
+    ,)
+  {%- endif -%}
+{%- endmacro %}
+
+{% for file in files %}
+class Test_{{ file.package.replace('.', '_') }}(unittest.TestCase):
+  {% for message in file.messages %}
+  def test{{ message.name }}_Basics(self):
+    pb = {{ file.package }}.{{ message.name }}()
+    {% for field in message.field %}
+    {% if field.type != TYPE.MESSAGE %}
+    pb.{{ field.name }} = {{ value(field, loop.index) }}
+    self.assertEquals({{ value(field, loop.index) }}, pb.{{ field.name }})
+    {% endif %}
+    {% endfor %}
+
+    pb2 = {{ file.package }}.{{ message.name }}()
+    pb2.ParseFromString(pb.SerializeToString())
+
+    {% for field in message.field %}
+    self.assertEquals(pb.{{ field.name }}, pb2.{{ field.name }})
+    {% endfor %}
+  {% endfor %}
+{% endfor %}
+
+
+def suite():
+  suite = unittest.TestSuite()
+  {% for file in files %}
+  suite.addTests(unittest.makeSuite(Test_{{ file.package.replace('.', '_') }}))
+  {% endfor %}
+  return suite

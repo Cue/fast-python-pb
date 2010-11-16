@@ -1,4 +1,8 @@
-from distutils.core import setup, Extension
+try:
+  from setuptools import setup, Extension
+except ImportError:
+  from distutils.core import setup, Extension
+
 setup(name="ADD_NAME_HERE",
       version="1.0",
       packages=[
@@ -15,4 +19,5 @@ setup(name="ADD_NAME_HERE",
         {% for file in files %}
           Extension("{{ file.package }}", ["{{ file.name }}.cc", "{{ file.name }}.pb.cc"], libraries=['protobuf']),
         {% endfor %}
-      ])
+      ],
+      test_suite="test.suite")
