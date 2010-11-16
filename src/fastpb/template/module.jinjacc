@@ -19,7 +19,7 @@ fastpb_convert{{ TYPE.DOUBLE }}(double value)
 static PyObject *
 fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
 {
-    return PyString_FromStringAndSize(value.data(), value.length());
+    return PyUnicode_Decode(value.data(), value.length(), "utf-8", NULL);
 }
 
 {% for message in messages %}
@@ -125,6 +125,10 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
 
       {% if member.type == TYPE.STRING %}
         // string
+        if (PyUnicode_Check(value)) {
+          value = PyUnicode_AsEncodedString(value, "utf-8", NULL);
+        }
+
         if (! PyString_Check(value)) {
           PyErr_SetString(PyExc_TypeError,
                           "The {{ member.name }} attribute value must be a string");
