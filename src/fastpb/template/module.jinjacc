@@ -148,7 +148,7 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
           protoValue = PyLong_AsLong(value);
         } else {
           PyErr_SetString(PyExc_TypeError,
-                          "The {{ member.name }} attribute value must be an integer");
+                          "The {{ member.name }} attribute value must be a double");
           return -1;
         }
 
