@@ -71,6 +71,15 @@ def writeTests(response, files):
   })
 
 
+def writeManifest(response, files):
+  """Writes the manifest."""
+  setupFile = response.file.add()
+  setupFile.name = 'MANIFEST.in'
+  setupFile.content = template('MANIFEST.jinjain').render({
+    'files': files
+  })
+
+
 def main():
   """Main generation method."""
   request = plugin_pb2.CodeGeneratorRequest()
@@ -109,7 +118,7 @@ def main():
 
   writeSetupPy(response, files, parents)
   writeTests(response, files)
-
+  writeManifest(response, files)
 
   sys.stdout.write(response.SerializeToString())
 

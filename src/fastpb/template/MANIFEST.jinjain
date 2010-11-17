@@ -1,0 +1,8 @@
+include MANIFEST.in
+include setup.py
+include test.py
+{% for file in files %}
+include {{ file.name }}.cc
+include {{ file.name }}.pb.cc
+include {{ file.name }}.pb.h
+{% endfor %}
