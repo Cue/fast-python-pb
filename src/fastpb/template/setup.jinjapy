@@ -3,7 +3,7 @@ try:
 except ImportError:
   from distutils.core import setup, Extension
 
-setup(name="ADD_NAME_HERE",
+setup(name="proto_wrapper",
       version="1.0",
       packages=[
         {% for parent in parents %}
