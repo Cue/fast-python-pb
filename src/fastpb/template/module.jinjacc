@@ -181,6 +181,8 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
             self->protobuf->add_{{ member.name.lower() }}(protoValue);
           {% endif %}
         }
+
+        Py_XDECREF(sequence);
       {% else %}
         {% if member.type == TYPE.MESSAGE %}
           self->protobuf->mutable_{{ member.name.lower() }}()->MergeFrom(*protoValue);
