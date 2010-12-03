@@ -114,6 +114,10 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
       }
 
       {% if member.label == LABEL.REPEATED %}
+        if (PyString_Check(input)) {
+          PyErr_SetString(PyExc_TypeError, "The {{ member.name }} attribute value must be a sequence");
+          return -1;
+        }
         PyObject *sequence = PySequence_Fast(input, "The {{ member.name }} attribute value must be a sequence");
         self->protobuf->clear_{{ member.name.lower() }}();
         for (Py_ssize_t i = 0, len = PySequence_Length(sequence); i < len; ++i) {
@@ -130,8 +134,7 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
         }
 
         if (! PyString_Check(value)) {
-          PyErr_SetString(PyExc_TypeError,
-                          "The {{ member.name }} attribute value must be a string");
+          PyErr_SetString(PyExc_TypeError, "The {{ member.name }} attribute value must be a string");
           return -1;
         }
 
