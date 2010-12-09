@@ -5,9 +5,9 @@
 
 
 static PyObject *
-fastpb_convert{{ TYPE.INT64 }}(long value)
+fastpb_convert{{ TYPE.INT64 }}(::google::protobuf::int64 value)
 {
-    return PyLong_FromLong(value);
+    return PyLong_FromLongLong(value);
 }
 
 static PyObject *
@@ -148,7 +148,7 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
         } else if (PyInt_Check(value)) {
           protoValue = PyInt_AsLong(value);
         } else if (PyLong_Check(value)) {
-          protoValue = PyLong_AsLong(value);
+          protoValue = PyLong_AsLongLong(value);
         } else {
           PyErr_SetString(PyExc_TypeError,
                           "The {{ member.name }} attribute value must be a double");
@@ -156,13 +156,13 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
         }
 
       {% elif member.type == TYPE.INT64 %}
-        long protoValue;
+        ::google::protobuf::int64 protoValue;
 
         // int64
         if (PyInt_Check(value)) {
           protoValue = PyInt_AsLong(value);
         } else if (PyLong_Check(value)) {
-          protoValue = PyLong_AsLong(value);
+          protoValue = PyLong_AsLongLong(value);
         } else {
           PyErr_SetString(PyExc_TypeError,
                           "The {{ member.name }} attribute value must be an integer");
