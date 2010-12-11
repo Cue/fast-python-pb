@@ -63,6 +63,7 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
   {
       std::string serialized(PyString_AsString(value), PyString_Size(value));
       self->protobuf->ParseFromString(serialized);
+      Py_XINCREF(Py_None);
       return Py_None;
   }
 
@@ -95,6 +96,7 @@ fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
 
         {% else %}
           if (! self->protobuf->has_{{ member.name.lower() }}()) {
+            Py_XINCREF(Py_None);
             return Py_None;
           }
 
