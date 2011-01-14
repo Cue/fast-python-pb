@@ -1,9 +1,12 @@
 #!/usr/bin/env python
+# Copyright 2010 Greplin, Inc.  All Rights Reserved.
+
+"""Setup script for fast python protocol buffers."""
 
 try:
-    from setuptools import setup
+  from setuptools import setup
 except ImportError:
-    from distutils.core import setup
+  from distutils.core import setup
 
 setup(name='fastpb',
       version='0.1',
@@ -12,8 +15,7 @@ setup(name='fastpb',
       author='Greplin, Inc.',
       author_email='opensource@greplin.com',
       url='http://www.github.com/Greplin/fast-python-pb',
-      # install_requires=['protobuf'],
-      package_dir={'fastpb': 'src/fastpb'},
+      package_dir={'': 'src'},
       packages=['fastpb'],
       package_data = {
         'fastpb': ['template/*'],
