@@ -1,0 +1,17 @@
+package person_proto;
+
+message Fact {
+  required string name = 1;
+
+  required string content = 2;
+}
+
+message Person {
+  required string name = 1;
+
+  required int32 birth_year = 2;
+
+  repeated string nicknames = 3;
+
+  repeated Fact facts = 4;
+}
