@@ -18,6 +18,7 @@ import sys
 TYPE = {
   'STRING': descriptor_pb2.FieldDescriptorProto.TYPE_STRING,
   'DOUBLE': descriptor_pb2.FieldDescriptorProto.TYPE_DOUBLE,
+  'INT32': descriptor_pb2.FieldDescriptorProto.TYPE_INT32,
   'INT64': descriptor_pb2.FieldDescriptorProto.TYPE_INT64,
   'MESSAGE': descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE
   # TODO(robbyw): More types.
