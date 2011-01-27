@@ -157,7 +157,7 @@ def main():
   timer = Timer("useLWPB(lwpb_codec)", "from __main__ import useLWPB, lwpb_codec")
   print timer.timeit(10000)
 
-  print "Protocol Buffer (cPickle)"
+  print "cPickle"
   timer = Timer("useCPickle()", "from __main__ import useCPickle")
   print timer.timeit(10000)
 
