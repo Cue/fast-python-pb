@@ -33,8 +33,12 @@ TYPE = {
   'STRING': descriptor_pb2.FieldDescriptorProto.TYPE_STRING,
   'DOUBLE': descriptor_pb2.FieldDescriptorProto.TYPE_DOUBLE,
   'INT32': descriptor_pb2.FieldDescriptorProto.TYPE_INT32,
+  'SINT32': descriptor_pb2.FieldDescriptorProto.TYPE_SINT32,
+  'UINT32': descriptor_pb2.FieldDescriptorProto.TYPE_UINT32,
   'INT64': descriptor_pb2.FieldDescriptorProto.TYPE_INT64,
-  'MESSAGE': descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE
+  'SINT64': descriptor_pb2.FieldDescriptorProto.TYPE_SINT64,
+  'MESSAGE': descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE,
+  'BYTES': descriptor_pb2.FieldDescriptorProto.TYPE_BYTES,
   # TODO(robbyw): More types.
 }
 
