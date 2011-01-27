@@ -21,6 +21,7 @@ from timeit import Timer
 import person_proto
 import person_pb2
 import json
+import simplejson
 import cPickle
 import lwpb.codec
 
@@ -62,6 +63,23 @@ def useJson():
   serialized = json.dumps(lincoln)
 
   json.loads(serialized)
+
+
+def useSimpleJson():
+  "Test serialization using SimpleJSON."
+  lincoln = {
+    'name': 'Abraham Lincoln',
+    'birth_year': 1809,
+    'nicknames': ['Honest Abe', 'Abe'],
+    'facts': {
+      'Born In': 'Kentucky',
+      'Died In': 'Washington D.C.',
+      'Greatest Speech': GETTYSBURG
+    }
+  }
+
+  serialized = simplejson.dumps(lincoln)
+  simplejson.loads(serialized)
 
 
 def usePb():
@@ -143,6 +161,11 @@ def main():
   """Runs the PB vs JSON benchmark."""
   print "JSON"
   timer = Timer("useJson()", "from __main__ import useJson")
+  print timer.timeit(10000)
+
+  """Runs the PB vs SimpleJSON benchmark."""
+  print "SimpleJSON"
+  timer = Timer("useSimpleJson()", "from __main__ import useSimpleJson")
   print timer.timeit(10000)
 
   print "Protocol Buffer"
