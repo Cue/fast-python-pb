@@ -21,6 +21,8 @@ from timeit import Timer
 import person_proto
 import person_pb2
 import json
+import cPickle
+import lwpb.codec
 
 
 GETTYSBURG = """
@@ -100,6 +102,42 @@ def useNativePb():
   newLincoln = person_pb2.Person()
   newLincoln.ParseFromString(serializedLincoln)
 
+def useLWPB(codec):
+  """Test protocol buffer serialization with lwpb."""
+
+  lincoln = {
+    'name' : 'Abraham Lincoln',
+    'birth_year' : 1809,
+    'nicknames' : ['Honest Abe', 'Abe'],
+    'facts' : [
+      { 'name' : 'Born In', 'content' : 'Kentucky' },
+      { 'name' : 'Died In', 'content' : 'Washington D.C.' },
+      { 'name' : 'Greatest Speech', 'content' : GETTYSBURG },
+    ]
+  }
+
+  serialized = codec.encode( lincoln )
+  newlincoln = codec.decode( serialized )
+
+def useCPickle():
+  """Test protocol buffer serialization with cPickle."""
+
+  lincoln = {
+    'name' : 'Abraham Lincoln',
+    'birth_year' : 1809,
+    'nicknames' : ['Honest Abe', 'Abe'],
+    'facts' : [
+      { 'name' : 'Born In', 'content' : 'Kentucky' },
+      { 'name' : 'Died In', 'content' : 'Washington D.C.' },
+      { 'name' : 'Greatest Speech', 'content' : GETTYSBURG },
+    ]
+  }
+
+  serialized = cPickle.dumps( lincoln )
+  newlincoln = cPickle.loads( serialized )
+
+
+lwpb_codec = lwpb.codec.MessageCodec( pb2file="person.pb2", typename="person_proto.Person" )
 
 def main():
   """Runs the PB vs JSON benchmark."""
@@ -113,6 +151,14 @@ def main():
 
   print "Protocol Buffer (native)"
   timer = Timer("useNativePb()", "from __main__ import useNativePb")
+  print timer.timeit(10000)
+
+  print "Protocol Buffer (lwpb)"
+  timer = Timer("useLWPB(lwpb_codec)", "from __main__ import useLWPB, lwpb_codec")
+  print timer.timeit(10000)
+
+  print "Protocol Buffer (cPickle)"
+  timer = Timer("useCPickle()", "from __main__ import useCPickle")
   print timer.timeit(10000)
 
 
