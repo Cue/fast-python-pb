@@ -90,3 +90,7 @@ example.py
 ### Authors:
 
 [Greplin, Inc.](http://www.greplin.com)
+
+[Alan Grow](https://github.com/acg)
+
+[Oliver Tonnhofer](https://github.com/olt)
