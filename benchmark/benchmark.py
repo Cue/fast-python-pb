@@ -212,7 +212,7 @@ def main():
   print timer.timeit(10000)
 
   print "Protocol Buffer (standard)"
-  timer = Timer("useNativePb()", "from __main__ import useStandardPb")
+  timer = Timer("useStandardPb()", "from __main__ import useStandardPb")
   print timer.timeit(10000)
 
   print "Protocol Buffer (lwpb)"
