@@ -5,13 +5,13 @@
 
 
 static PyObject *
-fastpb_convert{{ TYPE.INT64 }}(::google::protobuf::int32 value)
+fastpb_convert{{ TYPE.INT32 }}(::google::protobuf::int32 value)
 {
     return PyLong_FromLong(value);
 }
 
 static PyObject *
-fastpb_convert{{ TYPE.INT32 }}(::google::protobuf::int64 value)
+fastpb_convert{{ TYPE.INT64 }}(::google::protobuf::int64 value)
 {
     return PyLong_FromLongLong(value);
 }
