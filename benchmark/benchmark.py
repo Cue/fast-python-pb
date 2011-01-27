@@ -80,7 +80,7 @@ def usePb():
   newLincoln.ParseFromString(serializedLincoln)
 
 
-def useNativePb():
+def useStandardPb():
   """Test protocol buffer serialization with native protocol buffers."""
   lincoln = person_pb2.Person(name = 'Abraham Lincoln', birth_year = 1809)
   lincoln.nicknames.extend(['Honest Abe', 'Abe'])
@@ -102,6 +102,7 @@ def useNativePb():
   newLincoln = person_pb2.Person()
   newLincoln.ParseFromString(serializedLincoln)
 
+
 def useLWPB(codec):
   """Test protocol buffer serialization with lwpb."""
 
@@ -118,6 +119,7 @@ def useLWPB(codec):
 
   serialized = codec.encode( lincoln )
   newlincoln = codec.decode( serialized )
+
 
 def useCPickle():
   """Test protocol buffer serialization with cPickle."""
@@ -139,18 +141,19 @@ def useCPickle():
 
 lwpb_codec = lwpb.codec.MessageCodec( pb2file="person.pb2", typename="person_proto.Person" )
 
+
 def main():
   """Runs the PB vs JSON benchmark."""
   print "JSON"
   timer = Timer("useJson()", "from __main__ import useJson")
   print timer.timeit(10000)
 
-  print "Protocol Buffer"
+  print "Protocol Buffer (fast)"
   timer = Timer("usePb()", "from __main__ import usePb")
   print timer.timeit(10000)
 
-  print "Protocol Buffer (native)"
-  timer = Timer("useNativePb()", "from __main__ import useNativePb")
+  print "Protocol Buffer (standard)"
+  timer = Timer("useNativePb()", "from __main__ import useStandardPb")
   print timer.timeit(10000)
 
   print "Protocol Buffer (lwpb)"
