@@ -38,6 +38,9 @@ Create the native python version:
 
     protoc --python_out . person.proto
 
+Compile the .proto for lwpb:
+
+    protoc person.proto -o person.pb2
 
 Run the benchmark:
 
