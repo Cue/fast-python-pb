@@ -52,6 +52,50 @@ fastpb_convert{{ TYPE.BYTES }}(const ::std::string &value)
     return PyString_FromStringAndSize(value.data(), value.length());
 }
 
+static PyObject *
+fastpb_convert{{ TYPE.BOOL }}(bool value)
+{
+    return PyBool_FromLong(value ? 1 : 0);
+}
+
+static PyObject *
+fastpb_convert{{ TYPE.ENUM }}(int value)
+{
+    // TODO(robbyw): Check EnumName_IsValid(value)
+    return PyLong_FromLong(value);
+}
+
+{% for enum in enums %}
+  typedef struct {
+      PyObject_HEAD
+  } enum_{{ enum.name }};
+
+  static PyTypeObject enum_{{ enum.name }}Type = {
+      PyObject_HEAD_INIT(NULL)
+      0,                                      /*ob_size*/
+      "{{ moduleName }}.{{ enum.name }}",     /*tp_name*/
+      sizeof(enum_{{ enum.name }}),           /*tp_basicsize*/
+      0,                                      /*tp_itemsize*/
+      0,                                      /*tp_dealloc*/
+      0,                                      /*tp_print*/
+      0,                                      /*tp_getattr*/
+      0,                                      /*tp_setattr*/
+      0,                                      /*tp_compare*/
+      0,                                      /*tp_repr*/
+      0,                                      /*tp_as_number*/
+      0,                                      /*tp_as_sequence*/
+      0,                                      /*tp_as_mapping*/
+      0,                                      /*tp_hash */
+      0,                                      /*tp_call*/
+      0,                                      /*tp_str*/
+      0,                                      /*tp_getattro*/
+      0,                                      /*tp_setattro*/
+      0,                                      /*tp_as_buffer*/
+      Py_TPFLAGS_DEFAULT,                     /*tp_flags*/
+      "{{ enum.name }} enumeration",          /* tp_doc */
+  };
+{% endfor %}
+
 {% for message in messages %}
   typedef struct {
       PyObject_HEAD
@@ -221,7 +265,31 @@ fastpb_convert{{ TYPE.BYTES }}(const ::std::string &value)
                           "The {{ member.name }} attribute value must be an integer");
           return -1;
         }
-        
+
+      {% elif member.type == TYPE.ENUM %}
+        // {{ member.type_name }}
+        {{ member.type_name.replace('.', '::') }} protoValue;
+
+        // int32
+        if (PyInt_Check(value)) {
+          protoValue = ({{ member.type_name.replace('.', '::') }}) PyInt_AsLong(value);
+        } else {
+          PyErr_SetString(PyExc_TypeError,
+                          "The {{ member.name }} attribute value must be an integer");
+          return -1;
+        }
+
+      {% elif member.type == TYPE.BOOL %}
+        bool protoValue;
+
+        if (PyBool_Check(value)) {
+          protoValue = (value == Py_True);
+        } else {
+          PyErr_SetString(PyExc_TypeError,
+                          "The {{ member.name }} attribute value must be a boolean");
+          return -1;
+        }
+
       {% elif member.type == TYPE.UINT32 %}
         ::google::protobuf::uint32 protoValue;
 
@@ -268,34 +336,36 @@ fastpb_convert{{ TYPE.BYTES }}(const ::std::string &value)
   static int
   {{ message.name }}_init({{ message.name }} *self, PyObject *args, PyObject *kwds)
   {
-      {% for member in message.field %}
-        PyObject *{{ member.name }} = NULL;
-      {% endfor %}
-
-      static char *kwlist[] = {
+      {% if message.field %}
         {% for member in message.field %}
-          (char *) "{{ member.name }}",
+          PyObject *{{ member.name }} = NULL;
         {% endfor %}
-        NULL
-      };
 
-      if (! PyArg_ParseTupleAndKeywords(
-          args, kwds, "|{{ 'O' * message.field|length }}", kwlist,
-          {% for member in message.field -%}
-            &{{ member.name }}
-            {%- if not loop.last -%}
-              ,
-            {%- endif -%}
-          {%- endfor %}))
-        return -1;
+        static char *kwlist[] = {
+          {% for member in message.field %}
+            (char *) "{{ member.name }}",
+          {% endfor %}
+          NULL
+        };
 
-      {% for member in message.field %}
-        if ({{ member.name }}) {
-          if ({{ message.name }}_set{{ member.name }}(self, {{ member.name }}, NULL) < 0) {
-            return -1;
+        if (! PyArg_ParseTupleAndKeywords(
+            args, kwds, "|{{ 'O' * message.field|length }}", kwlist,
+            {% for member in message.field -%}
+              &{{ member.name }}
+              {%- if not loop.last -%}
+                ,
+              {%- endif -%}
+            {%- endfor %}))
+          return -1;
+
+        {% for member in message.field %}
+          if ({{ member.name }}) {
+            if ({{ message.name }}_set{{ member.name }}(self, {{ member.name }}, NULL) < 0) {
+              return -1;
+            }
           }
-        }
-      {% endfor %}
+        {% endfor %}
+      {% endif %}
 
       return 0;
   }
@@ -385,6 +455,10 @@ init{{ packageName }}(void)
 
     PyObject* m;
 
+    {% if enums %}
+      PyObject *classDict;
+    {% endif %}
+
     {% for message in messages %}
       if (PyType_Ready(&{{ message.name }}Type) < 0)
           return;
@@ -395,6 +469,21 @@ init{{ packageName }}(void)
 
     if (m == NULL)
       return;
+
+    {% for enum in enums %}
+      classDict = PyDict_New();
+      {% for value in enum.value %}
+        PyDict_SetItemString(classDict, "{{ value.name }}", PyInt_FromLong({{ value.number }}));
+      {% endfor %}
+
+      enum_{{ enum.name }}Type.tp_dict = classDict;
+      enum_{{ enum.name }}Type.tp_new = PyType_GenericNew;
+      if (PyType_Ready(&enum_{{ enum.name }}Type) < 0)
+        return;
+
+      Py_INCREF(&enum_{{ enum.name }}Type);
+      PyModule_AddObject(m, "{{ enum.name }}", (PyObject *)&enum_{{ enum.name }}Type);
+    {% endfor %}
 
     {% for message in messages %}
       Py_INCREF(&{{ message.name }}Type);

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # Copyright 2011 The fast-python-pb Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,6 +38,8 @@ TYPE = {
   'SINT64': descriptor_pb2.FieldDescriptorProto.TYPE_SINT64,
   'MESSAGE': descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE,
   'BYTES': descriptor_pb2.FieldDescriptorProto.TYPE_BYTES,
+  'BOOL': descriptor_pb2.FieldDescriptorProto.TYPE_BOOL,
+  'ENUM': descriptor_pb2.FieldDescriptorProto.TYPE_ENUM,
   # TODO(robbyw): More types.
 }
 
@@ -60,6 +61,7 @@ def writeCFile(response, name, fileObject):
     'package': fileObject.package.replace('.', '::'),
     'packageName': fileObject.package.split('.')[-1],
     'messages': fileObject.message_type,
+    'enums': fileObject.enum_type,
     'TYPE': TYPE,
     'LABEL': LABEL
   }
