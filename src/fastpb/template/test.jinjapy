@@ -13,6 +13,8 @@ import {{ file.package }}
   {%- endif -%}
   {%- if field.type == TYPE.STRING -%}
     u'{{ index }}'
+  {%- elif field.type == TYPE.FLOAT -%}
+    {{ index }}.0
   {%- elif field.type == TYPE.INT64 -%}
     {{ index }}
   {%- elif field.type == TYPE.DOUBLE -%}

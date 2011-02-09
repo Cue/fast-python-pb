@@ -41,6 +41,12 @@ fastpb_convert{{ TYPE.DOUBLE }}(double value)
 }
 
 static PyObject *
+fastpb_convert{{ TYPE.FLOAT }}(float value)
+{
+   return PyFloat_FromDouble(value);
+}
+
+static PyObject *
 fastpb_convert{{ TYPE.STRING }}(const ::std::string &value)
 {
     return PyUnicode_Decode(value.data(), value.length(), "utf-8", NULL);
@@ -225,9 +231,12 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
 
         std::string protoValue(PyString_AsString(value), PyString_Size(value));
 
-      {% elif member.type == TYPE.DOUBLE %}
-        // double
+      {% elif member.type == TYPE.DOUBLE or member.type == TYPE.FLOAT %}
+        {% if member.type == TYPE.DOUBLE %}
         double protoValue;
+        {% elif member.type == TYPE.FLOAT %}
+        float protoValue;
+        {% endif %}
         if (PyFloat_Check(value)) {
           protoValue = PyFloat_AsDouble(value);
         } else if (PyInt_Check(value)) {
@@ -236,7 +245,11 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
           protoValue = PyLong_AsLongLong(value);
         } else {
           PyErr_SetString(PyExc_TypeError,
+                        {% if member.type == TYPE.DOUBLE %}
                           "The {{ member.name }} attribute value must be a double");
+                        {% elif member.type == TYPE.FLOAT %}
+                          "The {{ member.name }} attribute value must be a float");
+                        {% endif %}
           return -1;
         }
 

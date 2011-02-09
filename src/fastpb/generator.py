@@ -31,6 +31,7 @@ import sys
 TYPE = {
   'STRING': descriptor_pb2.FieldDescriptorProto.TYPE_STRING,
   'DOUBLE': descriptor_pb2.FieldDescriptorProto.TYPE_DOUBLE,
+  'FLOAT': descriptor_pb2.FieldDescriptorProto.TYPE_FLOAT,
   'INT32': descriptor_pb2.FieldDescriptorProto.TYPE_INT32,
   'SINT32': descriptor_pb2.FieldDescriptorProto.TYPE_SINT32,
   'UINT32': descriptor_pb2.FieldDescriptorProto.TYPE_UINT32,
