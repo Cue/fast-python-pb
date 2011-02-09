@@ -19,6 +19,7 @@
 import plugin_pb2
 
 from google.protobuf import descriptor_pb2
+from fastpb.util import order_dependencies
 from jinja2 import Template
 
 # pylint: disable=E0611
@@ -54,14 +55,34 @@ def template(name):
   return Template(resource_string(__name__, 'template/' + name))
 
 
+def sort_messages(moduleName, messages):
+    # sort messages so that sub-messages are defined first
+    # to avoid compile errors: XXX was not declared in this scope
+    dependencies = []
+    msg_dict = {}
+    for msg in messages:
+        msg_name = '.' + moduleName + '.' + msg.name
+        msg_dict[msg_name] = msg
+        deps = set()
+        for member in msg.field:
+            if member.type == TYPE['MESSAGE']:
+                deps.add(member.type_name)
+        dependencies.append((msg_name, deps))
+    
+    sorted_msg_names = order_dependencies(dependencies)
+    ordered_msgs = [msg_dict[n] for n in sorted_msg_names]
+    return ordered_msgs
+
+
 def writeCFile(response, name, fileObject):
   """Writes a C file."""
+  messages = sort_messages(fileObject.package, fileObject.message_type)
   context = {
     'fileName': name,
     'moduleName': fileObject.package.lstrip('.'),
     'package': fileObject.package.replace('.', '::'),
     'packageName': fileObject.package.split('.')[-1],
-    'messages': fileObject.message_type,
+    'messages': messages,
     'enums': fileObject.enum_type,
     'TYPE': TYPE,
     'LABEL': LABEL
