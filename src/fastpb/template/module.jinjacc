@@ -35,6 +35,12 @@ fastpb_convert{{ TYPE.UINT32 }}(::google::protobuf::uint32 value)
 }
 
 static PyObject *
+fastpb_convert{{ TYPE.UINT64 }}(::google::protobuf::uint64 value)
+{
+    return PyLong_FromUnsignedLong(value);
+}
+
+static PyObject *
 fastpb_convert{{ TYPE.DOUBLE }}(double value)
 {
     return PyFloat_FromDouble(value);
@@ -303,8 +309,12 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
           return -1;
         }
 
-      {% elif member.type == TYPE.UINT32 %}
+      {% elif member.type == TYPE.UINT32  or member.type == TYPE.UINT64 %}
+      {% if member.type == TYPE.UINT32 %}
         ::google::protobuf::uint32 protoValue;
+      {% elif member.type == TYPE.UINT64 %}
+        ::google::protobuf::uint64 protoValue;
+      {% endif %}
 
         // uint32
         if (PyInt_Check(value)) {

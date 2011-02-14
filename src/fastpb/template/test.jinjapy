@@ -15,7 +15,8 @@ import {{ file.package }}
     u'{{ index }}'
   {%- elif field.type == TYPE.FLOAT -%}
     {{ index }}.0
-  {%- elif field.type == TYPE.INT64 -%}
+  {%- elif field.type == TYPE.INT64
+        or field.type == TYPE.UINT64 -%}
     {{ index }}
   {%- elif field.type == TYPE.DOUBLE -%}
     {{ index }}.{{ index }}
