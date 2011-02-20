@@ -149,8 +149,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
   {
       std::string serialized(PyString_AsString(value), PyString_Size(value));
       self->protobuf->ParseFromString(serialized);
-      Py_XINCREF(Py_None);
-      return Py_None;
+      Py_RETURN_NONE
   }
 
 
@@ -182,8 +181,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
 
         {% else %}
           if (! self->protobuf->has_{{ member.name.lower() }}()) {
-            Py_XINCREF(Py_None);
-            return Py_None;
+            Py_RETURN_NONE
           }
 
           return
