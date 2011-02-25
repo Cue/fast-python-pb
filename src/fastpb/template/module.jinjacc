@@ -215,8 +215,10 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
 
       {% if member.type == TYPE.STRING %}
         // string
+        bool reallocated = false;
         if (PyUnicode_Check(value)) {
           value = PyUnicode_AsEncodedString(value, "utf-8", NULL);
+          reallocated = true;
         }
 
         if (! PyString_Check(value)) {
@@ -225,6 +227,9 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
         }
 
         std::string protoValue(PyString_AsString(value), PyString_Size(value));
+        if (reallocated) {
+          Py_XDECREF(value);
+        }
 
       {% elif member.type == TYPE.BYTES %}
         // string
