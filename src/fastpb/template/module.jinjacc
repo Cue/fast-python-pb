@@ -317,11 +317,11 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
         }
 
       {% elif member.type == TYPE.UINT32  or member.type == TYPE.UINT64 %}
-      {% if member.type == TYPE.UINT32 %}
-        ::google::protobuf::uint32 protoValue;
-      {% elif member.type == TYPE.UINT64 %}
-        ::google::protobuf::uint64 protoValue;
-      {% endif %}
+        {% if member.type == TYPE.UINT32 %}
+          ::google::protobuf::uint32 protoValue;
+        {% elif member.type == TYPE.UINT64 %}
+          ::google::protobuf::uint64 protoValue;
+        {% endif %}
 
         // uint32
         if (PyInt_Check(value)) {
