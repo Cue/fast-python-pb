@@ -336,6 +336,12 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
 
       {% elif member.type == TYPE.MESSAGE %}
 
+        if (!PyType_IsSubtype(value->ob_type, &{{ member.type_name.split('.')[-1] }}Type)) {
+          PyErr_SetString(PyExc_TypeError,
+                          "The {{ member.name }} attribute value must be an instance of {{ member.type_name }}");
+          return -1;
+        }
+
          // {{ member.type_name }}
         {{ member.type_name.replace('.', '::') }} *protoValue =
             (({{ member.type_name.split('.')[-1] }} *) value)->protobuf;
