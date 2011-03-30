@@ -13,13 +13,23 @@ import {{ file.package }}
   {%- endif -%}
   {%- if field.type == TYPE.STRING -%}
     u'{{ index }}'
+  {%- elif field.type == TYPE.BYTES -%}
+    b'\x00\x01\x02'
+  {%- elif field.type == TYPE.BOOL -%}
+    True
   {%- elif field.type == TYPE.FLOAT -%}
     {{ index }}.0
-  {%- elif field.type == TYPE.INT64
+  {%- elif field.type == TYPE.INT32
+        or field.type == TYPE.SINT32
+        or field.type == TYPE.UINT32
+        or field.type == TYPE.INT64
+        or field.type == TYPE.SINT64
         or field.type == TYPE.UINT64 -%}
     {{ index }}
   {%- elif field.type == TYPE.DOUBLE -%}
     {{ index }}.{{ index }}
+  {%- elif field.type == TYPE.ENUM -%}
+    0
   {%- endif -%}
   {%- if field.label == LABEL.REPEATED -%}
     ,)
