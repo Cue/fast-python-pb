@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import defaultdict
+from functools import reduce
 
 try:
     from collections import OrderedDict
@@ -20,71 +20,83 @@ except ImportError:
     # just ignore the order with Python <2.7 for now
     OrderedDict = dict
 
-def order_dependencies(dependencies):
-    """Produce an ordered list of the given dependencies.
+class CyclicError(Exception):
+    pass
 
-    >>> order_dependencies([
-    ...     ('a', ('b', 'c')),
-    ...     ('b', ('c', )),
-    ...     ('c', ()),
-    ... ])
+def order_dependencies(dependencies):
+    """Produce a topologically-sorted list of the given dependencies.
+
+    >>> list(order_dependencies([
+    ...     ('a', set(['b', 'c'])),
+    ...     ('b', set(['c'])),
+    ...     ('c', set()),
+    ... ]))
     ['c', 'b', 'a']
 
     Flat dependencies simply yield the original order.
 
-    >>> order_dependencies([
-    ...     ('a', ()),
-    ...     ('b', ()),
-    ...     ('c', ()),
-    ... ])
+    >>> list(order_dependencies([
+    ...     ('a', set()),
+    ...     ('b', set()),
+    ...     ('c', set()),
+    ... ]))
     ['a', 'b', 'c']
 
-    Diamond dependencies are also supported.
+    Nested and diamond dependencies are also supported.
 
-    >>> order_dependencies([
-    ...     ('a', ('b', 'c')),
-    ...     ('b', ('d',)),
-    ...     ('c', ('d',)),
-    ...     ('d', ()),
-    ... ])
+    >>> list(order_dependencies([
+    ...     ('a', set()),
+    ...     ('b', set(['c', 'd'])),
+    ...     ('c', set()),
+    ... ]))
+    ['a', 'c', 'd', 'b']
+    >>> list(order_dependencies([
+    ...     ('a', set(['b', 'c'])),
+    ...     ('b', set(['d'])),
+    ...     ('c', set(['d'])),
+    ...     ('d', set()),
+    ... ]))
     ['d', 'b', 'c', 'a']
 
-    Recursive depdencies (i.e. loops) result in a RuntimeError.
+    Cyclic dependencies result in a CyclicError.
 
-    >>> order_dependencies([
-    ...     ('a', ('b')),
-    ...     ('b', ('c',)),
-    ...     ('c', ('a',)),
-    ... ])
+    >>> list(order_dependencies([
+    ...     ('a', set(['b'])),
+    ...     ('b', set(['c'])),
+    ...     ('c', set(['a'])),
+    ... ]))
     Traceback (most recent call last):
         ...
-    RuntimeError: recursive dependency detected
-    """
-    depends_on = OrderedDict()
-    dependent_off = defaultdict(set)
-    
-    for item, deps in dependencies:
-        depends_on[item] = set()
-        for dep in deps:
-            dependent_off[dep].add(item)
-            depends_on[item].add(dep)
-    
-    result = []
-    while depends_on:
-        # collect items wihout any dependencies
-        for item, dependens in depends_on.iteritems():
-            if not dependens: # item without dependencies
-                result.append(item)
-                del depends_on[item]
-                if item in dependent_off:
-                    # item resolved -> remove from dependents
-                    for dependents in dependent_off[item]:
-                        depends_on[dependents].remove(item)
-                break # start again to keep general order of dependencies
-        else:
-            raise RuntimeError('recursive dependency detected')
+    CyclicError: A cyclic dependency exists amongst {'a': set(['b']), 'c': set(['a']), 'b': set(['c'])}
 
-    return result
+    Based on toposort2() by Paddy McCarthy.
+    (see http://code.activestate.com/recipes/577413-topological-sort/)
+    """
+    data = OrderedDict(dependencies)
+
+    # Ignore self dependencies.
+    for k, v in data.items():
+        v.discard(k)
+
+    # Add top-level keys for any unrepresented values.
+    for item in reduce(set.union, data.values()) - set(data.keys()):
+        data[item] = set()
+
+    while True:
+        ordered = set(item for item, dep in data.items() if not dep)
+        if not ordered:
+            break
+        for dep in sorted(ordered):
+            yield dep
+
+        remaining = {}
+        for item, dep in data.iteritems():
+            if item not in ordered:
+                remaining[item] = (dep - ordered)
+        data = remaining
+
+    if data:
+        raise CyclicError('A cyclic dependency exists amongst %r' % dict(data))
 
 if __name__ == "__main__":
     import doctest
