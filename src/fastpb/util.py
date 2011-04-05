@@ -21,6 +21,45 @@ except ImportError:
     OrderedDict = dict
 
 def order_dependencies(dependencies):
+    """Produce an ordered list of the given dependencies.
+
+    >>> order_dependencies([
+    ...     ('a', ('b', 'c')),
+    ...     ('b', ('c', )),
+    ...     ('c', ()),
+    ... ])
+    ['c', 'b', 'a']
+
+    Flat dependencies simply yield the original order.
+
+    >>> order_dependencies([
+    ...     ('a', ()),
+    ...     ('b', ()),
+    ...     ('c', ()),
+    ... ])
+    ['a', 'b', 'c']
+
+    Diamond dependencies are also supported.
+
+    >>> order_dependencies([
+    ...     ('a', ('b', 'c')),
+    ...     ('b', ('d',)),
+    ...     ('c', ('d',)),
+    ...     ('d', ()),
+    ... ])
+    ['d', 'b', 'c', 'a']
+
+    Recursive depdencies (i.e. loops) result in a RuntimeError.
+
+    >>> order_dependencies([
+    ...     ('a', ('b')),
+    ...     ('b', ('c',)),
+    ...     ('c', ('a',)),
+    ... ])
+    Traceback (most recent call last):
+        ...
+    RuntimeError: recursive dependency detected
+    """
     depends_on = OrderedDict()
     dependent_off = defaultdict(set)
     
@@ -43,46 +82,10 @@ def order_dependencies(dependencies):
                         depends_on[dependents].remove(item)
                 break # start again to keep general order of dependencies
         else:
-            assert False, 'recursive dependency detected'
+            raise RuntimeError('recursive dependency detected')
 
     return result
 
-class TestOrderDependencies(object):
-    def test_tree(self):
-        tree = [
-            ('a', ('b', 'c')),
-            ('b', ('c', )),
-            ('c', ()),
-        ]
-        assert order_dependencies(tree) == ['c', 'b', 'a']
-    
-    def test_flat(self):
-        tree = [
-            ('a', ()),
-            ('b', ()),
-            ('c', ()),
-        ]
-        assert order_dependencies(tree) == ['a', 'b', 'c']
-    
-    def test_diamond(self):
-        tree = [
-            ('a', ('b', 'c')),
-            ('b', ('d',)),
-            ('c', ('d',)),
-            ('d', ()),
-        ]
-        assert order_dependencies(tree) == ['d', 'b', 'c', 'a']
-
-    def test_loop(self):
-        tree = [
-            ('a', ('b')),
-            ('b', ('c',)),
-            ('c', ('a',)),
-        ]
-        try:
-            order_dependencies(tree)
-        except AssertionError:
-            pass
-        else:
-            assert False, 'assertion expected'
-
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
