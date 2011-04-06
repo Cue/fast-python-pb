@@ -3,6 +3,9 @@
 #include "structmember.h"
 #include "{{ fileName }}.pb.h"
 
+{% macro cpp_type_name(field) -%}
+    {{ '_'.join(field.type_name.replace('.' + packageName + '.', '').split('.')) }}
+{%- endmacro %}
 
 static PyObject *
 fastpb_convert{{ TYPE.INT32 }}(::google::protobuf::int32 value)
@@ -162,8 +165,8 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
       static PyObject *
       fastpb_convert{{ message.name + member.name }}(const ::google::protobuf::Message &value)
       {
-          {{ member.type_name.split('.')[-1] }} *obj = ({{ member.type_name.split('.')[-1] }} *)
-              {{ member.type_name.split('.')[-1] }}_new(&{{ member.type_name.split('.')[-1] }}Type, NULL, NULL);
+          {{ cpp_type_name(member) }} *obj = ({{ cpp_type_name(member) }} *)
+              {{ cpp_type_name(member) }}_new(&{{ cpp_type_name(member) }}Type, NULL, NULL);
           obj->protobuf->MergeFrom(value);
           return (PyObject *)obj;
       }
@@ -336,15 +339,15 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
 
       {% elif member.type == TYPE.MESSAGE %}
 
-        if (!PyType_IsSubtype(value->ob_type, &{{ member.type_name.split('.')[-1] }}Type)) {
+        if (!PyType_IsSubtype(value->ob_type, &{{ cpp_type_name(member) }}Type)) {
           PyErr_SetString(PyExc_TypeError,
-                          "The {{ member.name }} attribute value must be an instance of {{ member.type_name }}");
+                          "The {{ member.name }} attribute value must be an instance of {{ cpp_type_name(member) }}");
           return -1;
         }
 
          // {{ member.type_name }}
         {{ member.type_name.replace('.', '::') }} *protoValue =
-            (({{ member.type_name.split('.')[-1] }} *) value)->protobuf;
+            (({{ cpp_type_name(member) }} *) value)->protobuf;
 
       {% endif %}
 
