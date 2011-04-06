@@ -1,0 +1,9 @@
+package com.greplin.test;
+
+message InnerMessage {
+  required string name = 1;
+}
+
+message OuterMessage {
+  required InnerMessage message = 1;
+}
