@@ -4,7 +4,7 @@
 #include "{{ fileName }}.pb.h"
 
 {% macro cpp_type_name(field) -%}
-    {{ '_'.join(field.type_name.replace('.' + packageName + '.', '').split('.')) }}
+    {{ '_'.join(field.type_name.replace('.' + moduleName + '.', '').split('.')) }}
 {%- endmacro %}
 
 static PyObject *
