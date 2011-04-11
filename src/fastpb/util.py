@@ -58,6 +58,11 @@ def order_dependencies(dependencies):
     ... ]))
     ['d', 'b', 'c', 'a']
 
+    An empty dependency list results in an empty generator sequence.
+
+    >>> list(order_dependencies([]))
+    []
+
     Cyclic dependencies result in a CyclicError.
 
     >>> list(order_dependencies([
@@ -77,6 +82,10 @@ def order_dependencies(dependencies):
     # Ignore self dependencies.
     for k, v in data.items():
         v.discard(k)
+
+    # If we're out of data, return (and produce an empty generator sequence).
+    if not data:
+        return
 
     # Add top-level keys for any unrepresented values.
     for item in reduce(set.union, data.values()) - set(data.keys()):
