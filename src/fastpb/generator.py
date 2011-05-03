@@ -57,43 +57,43 @@ def template(name):
 
 
 def sort_messages(fileObject):
-    """Return a sorted list of messages (sub-messages first).
+  """Return a sorted list of messages (sub-messages first).
 
-    This avoids compilation problems involving declaration order.
-    """
-    dependencies = []
-    msg_dict = {}
+  This avoids compilation problems involving declaration order.
+  """
+  dependencies = []
+  msgDict = {}
 
-    def visit(base_name, messages, parent=None):
-        for msg in messages:
-            # Build our type name (using the protocol buffer convention) and
-            # use it to register this message type object in our dictionary.
-            type_name = base_name + '.' + msg.name
-            msg_dict[type_name] = msg
+  def visit(baseName, messages, parent=None):
+    """Visitor for the message tree."""
+    for msg in messages:
+      # Build our type name (using the protocol buffer convention) and
+      # use it to register this message type object in our dictionary.
+      typeName = baseName + '.' + msg.name
+      msgDict[typeName] = msg
 
-            # If this is a nested message type, prepend our parent's name to
-            # our name for all future name lookups (via template expansion).
-            # This disambiguates nested message names so that two n-level
-            # messages can both have nested message types with the same name.
-            # This also matches the generated C++ code's naming convention.
-            if parent is not None:
-                msg.name = parent.name + '_' + msg.name
+      # If this is a nested message type, prepend our parent's name to
+      # our name for all future name lookups (via template expansion).
+      # This disambiguates nested message names so that two n-level
+      # messages can both have nested message types with the same name.
+      # This also matches the generated C++ code's naming convention.
+      if parent is not None:
+        msg.name = parent.name + '_' + msg.name
 
-            # If this message has nested message types, recurse.
-            if msg.nested_type:
-                visit(type_name, msg.nested_type, parent=msg)
+      # If this message has nested message types, recurse.
+      if msg.nested_type:
+        visit(typeName, msg.nested_type, parent=msg)
 
-            # Generate the set of messages that this type is dependent upon.
-            deps = set([field.type_name for field in msg.field
-                        if field.type == TYPE['MESSAGE']])
-            dependencies.append((type_name, deps))
+      # Generate the set of messages that this type is dependent upon.
+      deps = set([field.type_name for field in msg.field
+                  if field.type == TYPE['MESSAGE']])
+      dependencies.append((typeName, deps))
 
-    # Start by visiting the file's top-level message types.
-    visit('.' + fileObject.package, fileObject.message_type)
+  # Start by visiting the file's top-level message types.
+  visit('.' + fileObject.package, fileObject.message_type)
 
-    sorted_msg_names = order_dependencies(dependencies)
-    ordered_msgs = [msg_dict[n] for n in sorted_msg_names]
-    return ordered_msgs
+  sortedMsgNames = order_dependencies(dependencies)
+  return [msgDict[n] for n in sortedMsgNames]
 
 
 def writeCFile(response, name, fileObject):
