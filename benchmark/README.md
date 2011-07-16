@@ -7,13 +7,19 @@ Running the benchmark
 The latest results on my MacBook pro are:
 
     JSON
-    2.80698990822
+    2.87792301178
 
-    Protocol Buffer
-    0.247446775436
+    SimpleJSON
+    0.56374001503
 
-    Protocol Buffer (native)
-    3.82191610336
+    Protocol Buffer (fast)
+    0.24841094017
+
+    Protocol Buffer (standard)
+    3.93004989624
+
+    cPickle
+    0.637856960297
 
 
 ### How to run the benchmark
