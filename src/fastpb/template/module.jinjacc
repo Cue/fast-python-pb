@@ -362,6 +362,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
         Py_XDECREF(sequence);
       {% else %}
         {% if member.type == TYPE.MESSAGE %}
+          self->protobuf->clear_{{ member.name.lower() }}();
           self->protobuf->mutable_{{ member.name.lower() }}()->MergeFrom(*protoValue);
         {% else %}
           self->protobuf->set_{{ member.name.lower() }}(protoValue);
