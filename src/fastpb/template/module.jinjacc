@@ -112,13 +112,20 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
 {% endfor %}
 
 {% for message in messages %}
+
+// Lets try not to pollute the global namespace
+namespace {
+
+  // Forward-declaration for recursive structures
+  extern PyTypeObject {{ message.name }}Type;
+
   typedef struct {
       PyObject_HEAD
 
       {{ package }}::{{ message.name }} *protobuf;
   } {{ message.name }};
 
-  static void
+  void
   {{ message.name }}_dealloc({{ message.name }}* self)
   {
       self->ob_type->tp_free((PyObject*)self);
@@ -126,7 +133,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
       delete self->protobuf;
   }
 
-  static PyObject *
+  PyObject *
   {{ message.name }}_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
   {
       {{ message.name }} *self;
@@ -138,7 +145,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
       return (PyObject *)self;
   }
 
-  static PyObject *
+  PyObject *
   {{ message.name }}_SerializeToString({{ message.name }}* self)
   {
       std::string result;
@@ -149,7 +156,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
   }
 
 
-  static PyObject *
+  PyObject *
   {{ message.name }}_ParseFromString({{ message.name }}* self, PyObject *value)
   {
       std::string serialized(PyString_AsString(value), PyString_Size(value));
@@ -159,10 +166,9 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
       Py_RETURN_NONE;
   }
 
-
   {% for member in message.field %}
     {% if member.type == TYPE.MESSAGE %}
-      static PyObject *
+      PyObject *
       fastpb_convert{{ message.name + member.name }}(const ::google::protobuf::Message &value)
       {
           {{ cpp_type_name(member) }} *obj = ({{ cpp_type_name(member) }} *)
@@ -172,7 +178,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
       }
     {% endif %}
 
-    static PyObject *
+    PyObject *
     {{ message.name }}_get{{ member.name }}({{ message.name }} *self, void *closure)
     {
         {% if member.label == LABEL.REPEATED %}
@@ -198,7 +204,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
         {% endif %}
     }
 
-    static int
+    int
     {{ message.name }}_set{{ member.name }}({{ message.name }} *self, PyObject *input, void *closure)
     {
       if (input == NULL || input == Py_None) {
@@ -373,7 +379,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
     }
   {% endfor %}
 
-  static int
+  int
   {{ message.name }}_init({{ message.name }} *self, PyObject *args, PyObject *kwds)
   {
       {% if message.field %}
@@ -410,12 +416,12 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
       return 0;
   }
 
-  static PyMemberDef {{ message.name }}_members[] = {
+  PyMemberDef {{ message.name }}_members[] = {
       {NULL}  // Sentinel
   };
 
 
-  static PyGetSetDef {{ message.name }}_getsetters[] = {
+  PyGetSetDef {{ message.name }}_getsetters[] = {
     {% for member in message.field %}
       {(char *)"{{ member.name }}",
        (getter){{ message.name }}_get{{ member.name }}, (setter){{ message.name }}_set{{ member.name }},
@@ -426,7 +432,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
   };
 
 
-  static PyMethodDef {{ message.name }}_methods[] = {
+  PyMethodDef {{ message.name }}_methods[] = {
       {"SerializeToString", (PyCFunction){{ message.name }}_SerializeToString, METH_NOARGS,
        "Serializes the protocol buffer to a string."
       },
@@ -437,7 +443,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
   };
 
 
-  static PyTypeObject {{ message.name }}Type = {
+  PyTypeObject {{ message.name }}Type = {
       PyObject_HEAD_INIT(NULL)
       0,                                      /*ob_size*/
       "{{ moduleName }}.{{ message.name }}",  /*tp_name*/
@@ -478,6 +484,7 @@ fastpb_convert{{ TYPE.ENUM }}(int value)
       0,                                      /* tp_alloc */
       {{ message.name }}_new,                 /* tp_new */
   };
+}
 
 {% endfor %}
 
