@@ -6,4 +6,6 @@ message InnerMessage {
 
 message OuterMessage {
   required InnerMessage message = 1;
+
+  optional OuterMessage recursive = 2;
 }
