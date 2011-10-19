@@ -174,16 +174,22 @@ namespace {
   PyObject *
   {{ message.name }}_ParseFromLongString({{ message.name }}* self, PyObject *value)
   {
-      std::auto_ptr<google::protobuf::io::ZeroCopyInputStream> input(
-          new google::protobuf::io::ArrayInputStream(PyString_AsString(value), PyString_Size(value)));
-      std::auto_ptr<google::protobuf::io::CodedInputStream> inputStream(
-          new google::protobuf::io::CodedInputStream(input.get()));
+      google::protobuf::io::ZeroCopyInputStream* input =
+          new google::protobuf::io::ArrayInputStream(PyString_AsString(value), PyString_Size(value));
+      google::protobuf::io::CodedInputStream* inputStream =
+          new google::protobuf::io::CodedInputStream(input);
       inputStream->SetTotalBytesLimit(512 * 1024 * 1024, 512 * 1024 * 1024);
 
       Py_BEGIN_ALLOW_THREADS
-      self->protobuf->ParseFromCodedStream(inputStream.get());
+      self->protobuf->ParseFromCodedStream(inputStream);
       Py_END_ALLOW_THREADS
-      if (input->ByteCount() != PyString_Size(value)) {
+
+      int bytesProcessed = input->ByteCount();
+
+      delete input;
+      delete inputStream;
+
+      if (bytesProcessed != PyString_Size(value)) {
         PyErr_SetString(PyExc_ValueError, "Not all of the input string was consumed");
         return NULL;
       }
