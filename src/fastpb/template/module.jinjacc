@@ -467,7 +467,7 @@ namespace {
       {"SerializeToString", (PyCFunction){{ message.name }}_SerializeToString, METH_NOARGS,
        "Serializes the protocol buffer to a string."
       },
-      {"ParseFromString", (PyCFunction){{ message.name }}_ParseFromString, METH_O,
+      {"ParseFromString", (PyCFunction){{ message.name }}_ParseFromLongString, METH_O,
        "Parses the protocol buffer from a string."
       },
       {"ParseFromLongString", (PyCFunction){{ message.name }}_ParseFromString, METH_O,
