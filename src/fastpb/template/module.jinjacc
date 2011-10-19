@@ -3,6 +3,10 @@
 #include "structmember.h"
 #include "{{ fileName }}.pb.h"
 
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+
+
 {% macro cpp_type_name(field) -%}
     {{ '_'.join(field.type_name.replace('.' + moduleName + '.', '').split('.')) }}
 {%- endmacro %}
@@ -165,6 +169,27 @@ namespace {
       Py_END_ALLOW_THREADS
       Py_RETURN_NONE;
   }
+
+
+  PyObject *
+  {{ message.name }}_ParseFromLongString({{ message.name }}* self, PyObject *value)
+  {
+      std::auto_ptr<google::protobuf::io::ZeroCopyInputStream> input(
+          new google::protobuf::io::ArrayInputStream(PyString_AsString(value), PyString_Size(value)));
+      std::auto_ptr<google::protobuf::io::CodedInputStream> inputStream(
+          new google::protobuf::io::CodedInputStream(input.get()));
+      inputStream->SetTotalBytesLimit(512 * 1024 * 1024, 512 * 1024 * 1024);
+
+      Py_BEGIN_ALLOW_THREADS
+      self->protobuf->ParseFromCodedStream(inputStream.get());
+      Py_END_ALLOW_THREADS
+      if (input->ByteCount() != PyString_Size(value)) {
+        PyErr_SetString(PyExc_ValueError, "Not all of the input string was consumed");
+        return NULL;
+      }
+      Py_RETURN_NONE;
+  }
+
 
   {% for member in message.field %}
     {% if member.type == TYPE.MESSAGE %}
@@ -438,6 +463,9 @@ namespace {
       },
       {"ParseFromString", (PyCFunction){{ message.name }}_ParseFromString, METH_O,
        "Parses the protocol buffer from a string."
+      },
+      {"ParseFromLongString", (PyCFunction){{ message.name }}_ParseFromString, METH_O,
+       "Parses the protocol buffer from a string as large as 512MB."
       },
       {NULL}  // Sentinel
   };
