@@ -184,8 +184,6 @@ namespace {
       self->protobuf->ParseFromCodedStream(inputStream);
       Py_END_ALLOW_THREADS
 
-      int bytesProcessed = input->ByteCount();
-
       delete inputStream;
       delete input;
 
