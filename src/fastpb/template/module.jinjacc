@@ -186,14 +186,53 @@ namespace {
 
       int bytesProcessed = input->ByteCount();
 
-      delete input;
       delete inputStream;
+      delete input;
 
-      if (bytesProcessed != PyString_Size(value)) {
-        PyErr_SetString(PyExc_ValueError, "Not all of the input string was consumed");
-        return NULL;
-      }
       Py_RETURN_NONE;
+  }
+
+
+  PyObject *
+  {{ message.name }}_ParseMany(void* nothing, PyObject *args)
+  {
+      PyObject *value;
+      PyObject *callback;
+      int fail = 0;
+
+      if (!PyArg_ParseTuple(args, "OO", &value, &callback)) {
+          return NULL;
+      }
+
+      google::protobuf::io::ZeroCopyInputStream* input =
+          new google::protobuf::io::ArrayInputStream(PyString_AsString(value), PyString_Size(value));
+      google::protobuf::io::CodedInputStream* inputStream =
+          new google::protobuf::io::CodedInputStream(input);
+
+      google::protobuf::uint32 bytes;
+      while (inputStream->ReadVarint32(&bytes)) {
+          google::protobuf::io::CodedInputStream::Limit messageLimit = inputStream->PushLimit(bytes);
+          PyObject *single = {{ message.name }}_new(&{{ message.name}}Type, NULL, NULL);
+
+          Py_BEGIN_ALLOW_THREADS
+          (({{message.name}} *)single)->protobuf->MergeFromCodedStream(inputStream);
+          Py_END_ALLOW_THREADS
+
+          inputStream->PopLimit(messageLimit);
+          if (PyObject_CallFunctionObjArgs(callback, single, NULL) == NULL) {
+              fail = 1;
+              break;
+          };
+      }
+
+      delete inputStream;
+      delete input;
+
+      if (fail) {
+          return NULL;
+      } else {
+          Py_RETURN_NONE;
+      }
   }
 
 
@@ -472,6 +511,9 @@ namespace {
       },
       {"ParseFromLongString", (PyCFunction){{ message.name }}_ParseFromLongString, METH_O,
        "Parses the protocol buffer from a string as large as 512MB."
+      },
+      {"ParseMany", (PyCFunction){{ message.name }}_ParseMany, METH_VARARGS | METH_CLASS,
+       "Parses many protocol buffers of this type from a string."
       },
       {NULL}  // Sentinel
   };
