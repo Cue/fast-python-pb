@@ -206,6 +206,7 @@ namespace {
           new google::protobuf::io::ArrayInputStream(PyString_AsString(value), PyString_Size(value));
       google::protobuf::io::CodedInputStream* inputStream =
           new google::protobuf::io::CodedInputStream(input);
+      inputStream->SetTotalBytesLimit(512 * 1024 * 1024, 512 * 1024 * 1024);
 
       google::protobuf::uint32 bytes;
       while (inputStream->ReadVarint32(&bytes)) {
