@@ -208,9 +208,13 @@ namespace {
       inputStream->SetTotalBytesLimit(512 * 1024 * 1024, 512 * 1024 * 1024);
 
       google::protobuf::uint32 bytes;
-      PyObject *single = {{ message.name }}_new(&{{ message.name}}Type, NULL, NULL);
+      PyObject *single = NULL;
       while (inputStream->ReadVarint32(&bytes)) {
           google::protobuf::io::CodedInputStream::Limit messageLimit = inputStream->PushLimit(bytes);
+
+          if (single == NULL) {
+            single = {{ message.name }}_new(&{{ message.name}}Type, NULL, NULL);
+          }
 
           Py_BEGIN_ALLOW_THREADS
           (({{message.name}} *)single)->protobuf->ParseFromCodedStream(inputStream);
@@ -222,8 +226,16 @@ namespace {
               fail = 1;
               break;
           };
+
+          if (single->ob_refcnt != 1) {
+            // If the callback saved a reference to the item, don't re-use it.
+            Py_XDECREF(single);
+            single = NULL;
+          }
       }
-      Py_XDECREF(single);
+      if (single != NULL) {
+        Py_XDECREF(single);
+      }
 
       delete inputStream;
       delete input;
