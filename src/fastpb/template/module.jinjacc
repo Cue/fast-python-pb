@@ -1,3 +1,4 @@
+// -*- C++ -*-
 #include <Python.h>
 #include <string>
 #include "structmember.h"
@@ -155,6 +156,32 @@ namespace {
       Py_BEGIN_ALLOW_THREADS
       self->protobuf->SerializeToString(&result);
       Py_END_ALLOW_THREADS
+      return PyString_FromStringAndSize(result.data(), result.length());
+  }
+
+
+  PyObject *
+  {{ message.name }}_SerializeMany(void *nothing, PyObject *values)
+  {
+      std::string result;
+      google::protobuf::io::ZeroCopyOutputStream* output =
+          new google::protobuf::io::StringOutputStream(&result);
+      google::protobuf::io::CodedOutputStream* outputStream =
+          new google::protobuf::io::CodedOutputStream(output);
+    
+      PyObject *sequence = PySequence_Fast(values, "The values to serialize must be a sequence.");
+      for (Py_ssize_t i = 0, len = PySequence_Length(sequence); i < len; ++i) {
+          {{ message.name }} *value = ({{ message.name }} *)PySequence_Fast_GET_ITEM(sequence, i);
+        
+          Py_BEGIN_ALLOW_THREADS
+          outputStream->WriteVarint32(value->protobuf->ByteSize());
+          value->protobuf->SerializeToCodedStream(outputStream);
+          Py_END_ALLOW_THREADS
+      }
+    
+      Py_XDECREF(sequence);
+      delete outputStream;
+      delete output;
       return PyString_FromStringAndSize(result.data(), result.length());
   }
 
@@ -517,6 +544,9 @@ namespace {
   PyMethodDef {{ message.name }}_methods[] = {
       {"SerializeToString", (PyCFunction){{ message.name }}_SerializeToString, METH_NOARGS,
        "Serializes the protocol buffer to a string."
+      },
+      {"SerializeMany", (PyCFunction){{ message.name }}_SerializeMany, METH_O | METH_CLASS,
+       "Serializes a sequence of protocol buffers to a string."
       },
       {"ParseFromString", (PyCFunction){{ message.name }}_ParseFromString, METH_O,
        "Parses the protocol buffer from a string."
