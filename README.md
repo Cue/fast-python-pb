@@ -70,21 +70,22 @@ person.proto
 
 example.py
 
-    import person_proto
+```python
+import person_proto
 
-    lincoln = person_proto.Person(name = 'Abraham Lincoln', birth_year = 1809)
-    lincoln.nicknames = ['Honest Abe', 'Abe']
-    lincoln.facts = [
-        person_proto.Fact(name = 'Born In', content = 'Kentucky'),
-        person_proto.Fact(name = 'Died In', content = 'Washington D.C.'),
-        person_proto.Fact(name = 'Greatest Speech', content = GETTYSBURG)
-    ]
+lincoln = person_proto.Person(name = 'Abraham Lincoln', birth_year = 1809)
+lincoln.nicknames = ['Honest Abe', 'Abe']
+lincoln.facts = [
+    person_proto.Fact(name = 'Born In', content = 'Kentucky'),
+    person_proto.Fact(name = 'Died In', content = 'Washington D.C.'),
+    person_proto.Fact(name = 'Greatest Speech', content = GETTYSBURG)
+]
 
-    serializedLincoln = lincoln.SerializeToString()
+serializedLincoln = lincoln.SerializeToString()
 
-    newLincoln = person_proto.Person()
-    newLincoln.ParseFromString(serializedLincoln)
-
+newLincoln = person_proto.Person()
+newLincoln.ParseFromString(serializedLincoln)
+```
 
 
 ### Authors:
