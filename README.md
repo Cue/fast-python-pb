@@ -1,8 +1,5 @@
-fast-python-pb
+fast-python-pb: Fast Python Protocol Buffers
 =====================
-
-Fast Python Protocol Buffers
-----------------------------
 
 Thin wrapper on top of the C++ protocol buffer implementation resulting in significantly faster protocol buffers in
 Python.
@@ -47,8 +44,7 @@ Install [protocol buffers](http://code.google.com/p/protobuf/)
 
 You can see the example in action in the benchmark directory.
 
-person.proto
-
+    // person.proto
     package person_proto;
 
     message Fact {
@@ -68,9 +64,8 @@ person.proto
     }
 
 
-example.py
-
 ```python
+# example.py
 import person_proto
 
 lincoln = person_proto.Person(name = 'Abraham Lincoln', birth_year = 1809)
