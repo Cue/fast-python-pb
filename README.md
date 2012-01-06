@@ -87,6 +87,49 @@ newLincoln = person_proto.Person()
 newLincoln.ParseFromString(serializedLincoln)
 ```
 
+### One more thing
+
+It's simple, but not that simple. The biggest caveat is that protobuf objects embedded in
+other protobuf objects are mutable, but all changes to them are discarded. If you want to
+build a protobuf with other protobufs in it, build them separately. To illustrate:
+
+```python
+import addressbook_proto
+
+entry = addressbook_proto.Entry(name='Gillian Baskin')
+entry.birthplace = addressbook_proto.Location(state='Minnesota', town='Duluth')
+
+# Now, to modify it. Don't do this:
+entry.birthplace.town = 'New Town'
+# Instead, do this:
+birthplace = entry.birthplace
+birthplace.town = 'New Town'
+entry.birthplace = birthplace
+```
+
+There are also several methods for serializing and deserializing. Here's a list:
+
+`ParseFromString(str)` parses from a serialized protobuf stream.
+
+`ParseFromLongString(str)` has the same effect as `ParseFromString(str)`, but is faster
+for long strings and slower for short ones. This isn't a huge difference, but could be
+important if you're dealing with very large protobufs.
+
+`SerializeToString()` returns the serialized form of the protobuf, as a string.
+
+`SerializeMany(protobufs)` takes a sequence of protobuf objects and serializes them to a
+single string. The length of each protobuf is marked, so this can be serialized back to a
+list of protobufs.
+
+`ParseMany(str, callback)` takes a string in the format produced by `SerializeMany`, and
+calls `callback` with each protobuf object, in order. You can use this to build a list of
+protobufs like this:
+
+```python
+people = []
+addressbook_proto.Person.ParseMany(serializedPeople, people.append)
+print people  # Will be a list of Person protobuf objects
+```
 
 ### Authors:
 
