@@ -28,7 +28,7 @@ Install [protocol buffers](http://code.google.com/p/protobuf/)
 
 ### Installation:
 
-    git clone https://github.com/Greplin/fast-python-pb.git
+    git clone https://github.com/Cue/fast-python-pb.git
 
     cd fast-python-pb
 
