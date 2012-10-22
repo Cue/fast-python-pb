@@ -38,5 +38,6 @@ setup(name='fastpb',
         'console_scripts': [
           'protoc-gen-fastpython = fastpb.generator:main'
         ]
-      }
+      },
+      install_requires=['protobuf >= 2.3.0', 'jinja2 >= 2.0'],
 )
