@@ -150,6 +150,17 @@ namespace {
   }
 
   PyObject *
+  {{ message.name }}_DebugString({{ message.name }}* self)
+  {
+      std::string result;
+      Py_BEGIN_ALLOW_THREADS
+      result = self->protobuf->Utf8DebugString();
+      Py_END_ALLOW_THREADS
+      return PyUnicode_FromStringAndSize(result.data(), result.length());
+  }
+
+
+  PyObject *
   {{ message.name }}_SerializeToString({{ message.name }}* self)
   {
       std::string result;
@@ -545,6 +556,9 @@ namespace {
 
 
   PyMethodDef {{ message.name }}_methods[] = {
+      {"DebugString", (PyCFunction){{ message.name }}_DebugString, METH_NOARGS,
+       "Generates a human readable form of this message, useful for debugging and other purposes."
+      },
       {"SerializeToString", (PyCFunction){{ message.name }}_SerializeToString, METH_NOARGS,
        "Serializes the protocol buffer to a string."
       },
