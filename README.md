@@ -133,3 +133,5 @@ print people  # Will be a list of Person protobuf objects
 [Alan Grow](https://github.com/acg)
 
 [Oliver Tonnhofer](https://github.com/olt)
+
+[Joe Shaw](https://github.com/joeshaw)
