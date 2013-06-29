@@ -539,6 +539,55 @@ namespace {
       return 0;
   }
 
+
+  PyObject *
+  {{ message.name }}_richcompare(PyObject *self, PyObject *other, int op)
+  {
+      PyObject *result = NULL;
+      if (!PyType_IsSubtype(other->ob_type, &{{ message.name }}Type)) {
+          result = Py_NotImplemented;
+      } else {
+          // This is not a particularly efficient implementation since it never short circuits, but it's better
+          // than nothing.  It should probably only be used for tests.
+          {{ message.name }} *selfValue = ({{ message.name }} *)self;
+          {{ message.name }} *otherValue = ({{ message.name }} *)other;
+          std::string selfSerialized;
+          std::string otherSerialized;
+          Py_BEGIN_ALLOW_THREADS
+          selfValue->protobuf->SerializeToString(&selfSerialized);
+          otherValue->protobuf->SerializeToString(&otherSerialized);
+          Py_END_ALLOW_THREADS
+
+          int cmp = selfSerialized.compare(otherSerialized);
+          bool value;
+          switch (op) {
+              case Py_LT:
+                  value = cmp < 0;
+                  break;
+              case Py_LE:
+                  value = cmp <= 0;
+                  break;
+              case Py_EQ:
+                  value = cmp == 0;
+                  break;
+              case Py_NE:
+                  value = cmp != 0;
+                  break;
+              case Py_GT:
+                  value = cmp > 0;
+                  break;
+              case Py_GE:
+                  value = cmp >= 0;
+                  break;
+          }
+          result = value ? Py_True : Py_False;
+      }
+
+      Py_XINCREF(result);
+      return result;
+  }
+
+
   PyMemberDef {{ message.name }}_members[] = {
       {NULL}  // Sentinel
   };
@@ -599,11 +648,11 @@ namespace {
       0,                                      /*tp_getattro*/
       0,                                      /*tp_setattro*/
       0,                                      /*tp_as_buffer*/
-      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_RICHCOMPARE, /*tp_flags*/
       "{{ message.name }} objects",           /* tp_doc */
       0,                                      /* tp_traverse */
       0,                                      /* tp_clear */
-      0,                   	 	                /* tp_richcompare */
+      {{ message.name }}_richcompare,         /* tp_richcompare */
       0,	   	                                /* tp_weaklistoffset */
       0,                   		                /* tp_iter */
       0,		                                  /* tp_iternext */
