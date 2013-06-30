@@ -1,6 +1,7 @@
 // -*- C++ -*-
 #include <Python.h>
 #include <string>
+#include <sstream>
 #include "structmember.h"
 #include "{{ fileName }}.pb.h"
 
@@ -588,6 +589,34 @@ namespace {
   }
 
 
+  static PyObject *
+  {{ message.name }}_repr(PyObject *selfObject)
+  {
+      {{ message.name }} *self = ({{ message.name }} *)selfObject;
+      PyObject *member;
+      PyObject *memberRepr;
+      std::stringstream result;
+      result << "{{ message.name}}(";
+
+      {% for member in message.field %}
+        {% if not loop.first %}
+          result << ", ";
+        {% endif %}
+        result << "{{ member.name }}=";
+        member = {{ message.name }}_get{{ member.name }}(self, NULL);
+        memberRepr = PyObject_Repr(member);
+        result << PyString_AsString(memberRepr);
+        Py_XDECREF(memberRepr);
+        Py_XDECREF(member);
+      {% endfor %}
+
+      result << ")";
+
+      std::string resultString = result.str();
+      return PyUnicode_Decode(resultString.data(), resultString.length(), "utf-8", NULL);
+  }
+
+
   PyMemberDef {{ message.name }}_members[] = {
       {NULL}  // Sentinel
   };
@@ -638,7 +667,7 @@ namespace {
       0,                                      /*tp_getattr*/
       0,                                      /*tp_setattr*/
       0,                                      /*tp_compare*/
-      0,                                      /*tp_repr*/
+      {{ message.name }}_repr,                /*tp_repr*/
       0,                                      /*tp_as_number*/
       0,                                      /*tp_as_sequence*/
       0,                                      /*tp_as_mapping*/
