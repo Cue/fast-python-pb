@@ -83,7 +83,7 @@ static PyObject *
 fastpb_convert{{ TYPE.ENUM }}(int value)
 {
     // TODO(robbyw): Check EnumName_IsValid(value)
-    return PyLong_FromLong(value);
+    return PyInt_FromLong(value);
 }
 
 {% for enum in enums %}
