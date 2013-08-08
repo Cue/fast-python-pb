@@ -31,13 +31,13 @@ setup(name='fastpb',
       url='https://www.github.com/Cue/fast-python-pb',
       package_dir={'': 'src'},
       packages=['fastpb'],
-      package_data = {
+      package_data={
         'fastpb': ['template/*'],
       },
-      entry_points = {
+      entry_points={
         'console_scripts': [
           'protoc-gen-fastpython = fastpb.generator:main'
         ]
       },
-      install_requires=['protobuf >= 2.3.0', 'jinja2 >= 2.0'],
+      install_requires=['ez-setup==0.9', 'protobuf >= 2.3.0', 'jinja2 >= 2.0'],
 )
