@@ -82,6 +82,10 @@ newLincoln = person_proto.Person()
 newLincoln.ParseFromString(serializedLincoln)
 ```
 
+The `package` definition is mandatory; it determines the Python module name that the code
+will generate. If it has dots for namespacing, like `com.cueup.foo`, the last part of the
+name (`foo`) will be used for the Python module name.
+
 ### One more thing
 
 It's simple, but not that simple. The biggest caveat is that protobuf objects embedded in
