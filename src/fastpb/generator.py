@@ -159,6 +159,9 @@ def main():
   for fileObject in request.proto_file:
     if fileObject.name not in generateFiles:
       continue
+    if not fileObject.package:
+      sys.stderr.write('%s: package definition required, but not found\n' % fileObject.name)
+      sys.exit(1)
 
     name = fileObject.name.split('.')[0]
     files.append({
