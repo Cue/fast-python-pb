@@ -560,7 +560,7 @@ namespace {
           Py_END_ALLOW_THREADS
 
           int cmp = selfSerialized.compare(otherSerialized);
-          bool value;
+          bool value = false;
           switch (op) {
               case Py_LT:
                   value = cmp < 0;
