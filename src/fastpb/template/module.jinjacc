@@ -46,7 +46,7 @@ fastpb_convert{{ TYPE.UINT32 }}(::google::protobuf::uint32 value)
 static PyObject *
 fastpb_convert{{ TYPE.FIXED32 }}(::google::protobuf::int32 value)
 {
-    return PyLong_FromUnsignedLong(value);
+    return PyLong_FromLong(value);
 }
 
 static PyObject *
