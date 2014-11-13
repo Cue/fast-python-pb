@@ -43,6 +43,7 @@ TYPE = {
   'BYTES': descriptor_pb2.FieldDescriptorProto.TYPE_BYTES,
   'BOOL': descriptor_pb2.FieldDescriptorProto.TYPE_BOOL,
   'ENUM': descriptor_pb2.FieldDescriptorProto.TYPE_ENUM,
+  'FIXED32': descriptor_pb2.FieldDescriptorProto.TYPE_FIXED32,
   # TODO(robbyw): More types.
 }
 
