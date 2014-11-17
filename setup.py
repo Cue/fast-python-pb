@@ -40,5 +40,4 @@ setup(name='fastpb',
         ]
       },
       install_requires=['ez-setup==0.9', 'protobuf >= 2.3.0', 'jinja2 >= 2.0'],
-#      install_requires=['protobuf >= 2.3.0', 'jinja2 >= 2.0'],
 )
